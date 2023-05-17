@@ -1,124 +1,149 @@
-D            [0-9]
-L            [a-zA-Z_]
-H            [a-fA-F0-9]
-E            ([Ee][+-]?{D}+)
-
 %{
+#include "AST.hpp"
+#include "Parser.hpp"
 #include <stdio.h>
-#include <iostream>
 #include <string>
-#include "treenode.h"
-#include "parsing.hpp"
+#include <iostream>
+extern "C" int yywrap() {return 1;}
 
-#define SAVE_TOKEN yylval.string = new std::string(yytext, yyleng)
-#define TOKEN(t) (yylval.token = t)
-
-int column = 0;
-
-void count(void);
-void comment(void);
+char Escape2Char(char ch){
+	switch(ch){
+	case 'a': return '\a';
+	case 'b': return '\b';
+	case 'f': return '\f';
+	case 'n': return '\n';
+	case 'r': return '\r';
+	case 't': return '\t';
+	case 'v': return '\v';
+	case '\\': return '\\';
+	case '\'': return '\'';
+	case '\"': return '\"';
+	default:
+		if ('0'<=ch && ch<='9')
+			return (char)(ch-'0');
+		else
+			return ch;
+	}
+}
 %}
 
-%option yylineno
+%option never-interactive
+%option outfile="lexer.cpp"
 
 %%
-    /* match two types of comments */
-"/*"            { comment();               }
-"//"[^\n]*      { /* consume //-comment */ }
-
-    /* match all the necessary keywords */
-"break"         { count(); return TOKEN(BREAK);    }
-"else"          { count(); return TOKEN(ELSE);     }
-"if"            { count(); return TOKEN(IF);       }
-"return"        { count(); return TOKEN(RETURN);   }
-"while"         { count(); return TOKEN(WHILE);    }
-"for"           { count(); return TOKEN(FOR);      }
-
-    /* identifiers */
-{L}({L}|{D})*            { count(); SAVE_TOKEN; return IDENTIFIER;}
-
-    /* constants */
-0[xX]{H}+                { count(); SAVE_TOKEN; return CONSTANT_INT; /* hexadecimal */ }
-0[0-7]*                  { count(); SAVE_TOKEN; return CONSTANT_INT; /* octal */       }
-[1-9]{D}*                { count(); SAVE_TOKEN; return CONSTANT_INT; /* decimal */     }
-
-\'.\'|\'\\.\'            { count(); SAVE_TOKEN; return CONSTANT_CHAR; /* character */  }
-\"(\\.|[^"\\])*\"      { count(); SAVE_TOKEN; return CONSTANT_STRING; /* string */    }
-
-
-{D}+{E}                  { count(); SAVE_TOKEN; return CONSTANT_FLOAT; }
-{D}*"."{D}+{E}?          { count(); SAVE_TOKEN; return CONSTANT_FLOAT; }
-{D}+"."{D}*{E}?          { count(); SAVE_TOKEN; return CONSTANT_FLOAT; }
-
-
-    /* operators */
-"&&"            { count(); return TOKEN(AND); }
-"||"            { count(); return TOKEN(OR); }
-"<="            { count(); return TOKEN(LEQ); }
-">="            { count(); return TOKEN(GEQ); }
-"=="            { count(); return TOKEN(EQU); }
-"!="            { count(); return TOKEN(NEQ); }
-";"             { count(); return TOKEN(';'); }
-"{"             { count(); return TOKEN('{'); }
-"}"             { count(); return TOKEN('}'); }
-","             { count(); return TOKEN(','); }
-":"             { count(); return TOKEN(':'); }
-"="             { count(); return TOKEN('='); }
-"("             { count(); return TOKEN('('); }
-")"             { count(); return TOKEN(')'); }
-"["             { count(); return TOKEN('['); }
-"]"             { count(); return TOKEN(']'); }
-"."             { count(); return TOKEN('.'); }
-"&"             { count(); return TOKEN(GAD); }
-"!"             { count(); return TOKEN(NOT); }
-"~"             { count(); return TOKEN('~'); }
-"-"             { count(); return TOKEN(MINUS); }
-"+"             { count(); return TOKEN(PLUS); }
-"*"             { count(); return TOKEN(MUL); }
-"/"             { count(); return TOKEN(DIV); }
-"%"             { count(); return TOKEN('%'); }
-"<"             { count(); return TOKEN(LESST); }
-">"             { count(); return TOKEN(GREATERT); }
-"^"             { count(); return TOKEN('^'); }
-"|"             { count(); return TOKEN('|'); }
-"?"             { count(); return TOKEN('?'); }
-
-[ \t\v\n\f]     { count(); }
-.               { printf("unknown token : %s in line: %d\n", yytext, yylineno); }
-
+","														{return COMMA;}
+"..."													{return ELLIPSES;}
+"."														{return DOT;}
+";"														{return SEMI;}
+"("														{return LPAREN;}
+")"														{return RPAREN;}
+"["														{return LBRACKET;}
+"]"														{return RBRACKET;}
+"{"														{return LBRACE;}
+"}"														{return RBRACE;}
+"<<="													{return SHLEQ;}
+"<<"													{return SHL;}
+">>="													{return SHREQ;}
+">>"													{return SHR;}
+"=="													{return EQ;}
+">="													{return GE;}
+">"														{return GT;}
+"<="													{return LE;}
+"<"														{return LT;}
+"!="													{return NEQ;}
+"!"														{return NOT;}
+"="														{return ASSIGN;}
+"&&"													{return AND;}
+"&="													{return BANDEQ;}
+"&"														{return BAND;}
+"||"													{return OR;}
+"|="													{return BOREQ;}
+"|"														{return BOR;}
+"->"													{return ARW;}
+"^="													{return BXOREQ;}
+"^"														{return BXOR;}
+"~"														{return BNOT;}
+"++"													{return DADD;}
+"+="													{return ADDEQ;}
+"+"														{return ADD;}
+"--"													{return DSUB;}
+"-="													{return SUBEQ;}
+"-"														{return SUB;}
+"*="													{return MULEQ;}
+"*"														{return MUL;}
+"/="													{return DIVEQ;}
+"/"														{return DIV;}
+"%="													{return MODEQ;}
+"%"														{return MOD;}
+"?"														{return QUES;}
+":"														{return COLON;}
+"struct"												{return STRUCT;}
+"union"													{return UNION;}
+"typedef"												{return TYPEDEF;}
+"const"													{return CONST;}
+"enum"													{return ENUM;}
+"ptr"													{return PTR;}
+"array"													{return ARRAY;}
+"if"													{return IF;}
+"else"													{return ELSE;}
+"for"													{return FOR;}
+"while"													{return WHILE;}
+"do"													{return DO;}
+"switch"												{return SWITCH;}
+"case"													{return CASE;}
+"default"												{return DEFAULT;}
+"continue"												{return CONTINUE;}
+"return"												{return RETURN;}
+"true"													{return TRUE; }
+"false"													{return FALSE; }
+"break"													{return BREAK; }
+"sizeof"												{return SIZEOF; }
+"bool"													{return BOOL; }
+"short"													{return SHORT; }
+"int"													{return INT; }
+"long"													{return LONG; }
+"char"													{return CHAR; }
+"float"													{return FLOAT; }
+"double"												{return DOUBLE; }
+"void"													{return VOID; }
+[ \t\n]													{ ; }
+"/*"[^*]*[*]+([^*/][^*]*[*]+)*"/"						{ ; }
+"//".*													{ ; }
+"\'"\\."\'"												{ 
+															yylval.cVal = Escape2Char(yytext[2]);
+															return CHARACTER; 
+														}
+"\'"[^\\']"\'"											{ 
+															yylval.cVal = yytext[1];
+															return CHARACTER; 
+														}
+"\'"													{return SQUOTE; }
+"\""(\\.|[^"\\])*"\""									{
+															yylval.strVal = new std::string("");
+															for (int i = 1; i <= yyleng-2; i++)
+																if (yytext[i] == '\\'){
+																	i++;
+																	yylval.strVal->push_back(Escape2Char(yytext[i]));
+																}else{
+																	yylval.strVal->push_back(yytext[i]);
+																}
+															return STRING;
+														}
+"\""													{return DQUOTE;}
+[a-zA-Z_][a-zA-Z0-9_]*									{ 
+															yylval.sVal = new std::string(yytext, yyleng);
+															return IDENTIFIER; 
+														} 
+[0-9]+\.[0-9]+											{ 
+															double dtmp;
+															sscanf(yytext, "%lf", &dtmp);
+															yylval.dVal = dtmp;
+															return REAL; 
+														}
+[0-9]+													{
+															int itmp;
+															sscanf(yytext, "%d", &itmp);
+															yylval.iVal = itmp; 
+															return INTEGER; 
+														}
 %%
-
-int yywrap(void)
-{
-    return 1;
-}
-
-
-void comment(void)
-{
-    column = 0;
-    char c, prev = 0;
-    
-    while (std::cin >> c)      /* (EOF maps to 0) */
-    {
-        if (c == '/' && prev == '*')
-            return;
-        prev = c;
-    }
-    printf("unterminated comment");
-}
-
-void count(void)
-{
-    int i;
-
-    for (i = 0; yytext[i] != '\0'; i++)
-        if (yytext[i] == '\n')
-            column = 0;
-        else if (yytext[i] == '\t')
-            column += 4 - (column % 4);
-        else
-            column++;
-
-    
-}
