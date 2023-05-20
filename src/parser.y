@@ -167,7 +167,7 @@ ParmList:
             ;
         
 Parm:       VarType IDENTIFIER                                  {  $$ = new AST::Parm($1,*$2);   }
-            | VarType                                           {  $$ = new AST::Parm($1);   }
+            | VarType                                           {  $$ = new AST::5($1);   }
             ;
 
 Block:		LBRACE Stms RBRACE										{  $$ = new AST::Block($2);   }

@@ -2,7 +2,7 @@
  * @Author: Theta 1467116498@qq.com
  * @Date: 2023-05-14 13:04:27
  * @LastEditors: Theta 1467116498@qq.com
- * @LastEditTime: 2023-05-17 14:58:42
+ * @LastEditTime: 2023-05-18 15:38:21
  * @FilePath: /MCC/src/ast.h
  * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
  */
@@ -162,32 +162,24 @@ namespace AST {
         ~Variable(){}
     };
 
-    class Constant : public Expr {
+    class Constant : public Exp {
 	public:
-		VarType* _Type;
-        union Value
-        {
-            /* data */
-            bool _Bool;
-            char _Character;
-            int _Integer;
-            double _Real;
-        } _Val;
-
-        _Val._Real;
+		VarType::TypeID _Type;
+        bool _Bool;
+        char _Character;
+        int _Integer;
+        double _Real;
         
 		
 		Constant(bool __Bool) :
-			_Type(new AST::BoolType()), _Bool(__Bool), _Character('\0'), _Integer(0), _Real(0.0) {}
+			_Type(VarType::TypeID::_Bool), _Bool(__Bool), _Character('\0'), _Integer(0), _Real(0.0) {}
 		Constant(char __Character) :
-			_Type(BuiltInType::TypeID::_Char), _Bool(false), _Character(__Character), _Integer(0), _Real(0.0) {}
+			_Type(VarType::TypeID::_Char), _Bool(false), _Character(__Character), _Integer(0), _Real(0.0) {}
 		Constant(int __Integer) :
-			_Type(BuiltInType::TypeID::_Int), _Bool(false), _Character('\0'), _Integer(__Integer), _Real(0.0) {}
+			_Type(VarType::TypeID::_Int), _Bool(false), _Character('\0'), _Integer(__Integer), _Real(0.0) {}
 		Constant(double __Real) :
-			_Type(BuiltInType::TypeID::_Double), _Bool(false), _Character('\0'), _Integer(0), _Real(__Real) {}
-		~Constant(void) {
-            if(_Type) delete _Type;
-        }
+			_Type(VarType::TypeID::_Double), _Bool(false), _Character('\0'), _Integer(0), _Real(__Real) {}
+		~Constant(void) {}
 	};
 
 
@@ -259,6 +251,17 @@ namespace AST {
     class VarType : public Node{
     public:
         bool _isConst;
+
+        enum TypeID {
+			_Bool,
+			_Short,
+			_Int,
+			_Long,
+			_Char,
+			_Float,
+			_Double,
+			_Void
+		};
 
         VarType() : _isConst(false) {};
         VarType(bool _isConst) : _isConst(_isConst) {};
