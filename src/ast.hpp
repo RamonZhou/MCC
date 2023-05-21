@@ -39,9 +39,12 @@ namespace AST{
         class Block;
 
     class Exp;
+    using Exps = std::vector<Exp*>;
         class Variable;
         class Constant;
         class Subscription;
+        class ArraySubscript;
+        class Sizeof;
         class FuncCall;
 
 
@@ -184,23 +187,288 @@ namespace AST {
         char _Character;
         int _Integer;
         double _Real;
+        std::string _String;
         
 		
 		Constant(bool __Bool) :
-			_Type(VarType::TypeID::_Bool), _Bool(__Bool), _Character('\0'), _Integer(0), _Real(0.0) {}
+			_Type(VarType::TypeID::_Bool), _Bool(__Bool), _Character('\0'), _Integer(0), _Real(0.0), _String("") {}
 		Constant(char __Character) :
-			_Type(VarType::TypeID::_Char), _Bool(false), _Character(__Character), _Integer(0), _Real(0.0) {}
+			_Type(VarType::TypeID::_Char), _Bool(false), _Character(__Character), _Integer(0), _Real(0.0), _String("") {}
 		Constant(int __Integer) :
-			_Type(VarType::TypeID::_Int), _Bool(false), _Character('\0'), _Integer(__Integer), _Real(0.0) {}
+			_Type(VarType::TypeID::_Int), _Bool(false), _Character('\0'), _Integer(__Integer), _Real(0.0), _String("") {}
 		Constant(double __Real) :
-			_Type(VarType::TypeID::_Double), _Bool(false), _Character('\0'), _Integer(0), _Real(__Real) {}
+			_Type(VarType::TypeID::_Double), _Bool(false), _Character('\0'), _Integer(0), _Real(__Real), _String("") {}
+        Constant(const std::string& __String) :
+			_Type(VarType::TypeID::_String), _Bool(false), _Character('\0'), _Integer(0), _Real(0.0), _String(__String) {}
 		~Constant(void) {}
 	    int GenGraphNode() {}
     };
 
+    class ArraySubscript : public Exp {
+    public:
+        Exp* _Array;
+        Exp* _IndexVal;
 
+        ArraySubscript(Exp* __Array, Exp* __IndexVal) : _Array(__Array), _IndexVal(__IndexVal) {}
+    };
 
+    class SizeOf : public Exp {
+    public:
+        Exp* _Exp;
+        VarType* _VarType;
+        std::string _Identifier;
 
+        SizeOf(Exp* __Exp) : _Exp(__Exp), _VarType(NULL), _Identifier("") {}
+        SizeOf(VarType* __VarType) : _Exp(NULL), _VarType(__VarType), _Identifier("") {}
+        SizeOf(std::string __Identifier) : _Exp(NULL), _VarType(NULL), _Identifier(__Identifier) {}
+    };
+
+    class FuncCall : public Exp {
+    public:
+        std::string _FuncName;
+        Exps* _ParmList;
+
+        FuncCall(const std::string& __FuncName, Exps* __ParmList) : _FuncName(__FuncName), _ParmList(__ParmList) {}
+    };
+
+    class LogicNot : public Exp{
+    public:
+        Exp* _Op;
+
+        LogicNot(Exp* __Op) : _Op(__Op) {}
+    };
+
+    class Division : public Exp{
+    public:
+        Exp* _LHS;
+        Exp* _RHS;
+
+        Division(Exp* __LHS, Exp* __RHS) : _LHS(__LHS), _RHS(__RHS) {}
+    };
+
+    class Multiplication : public Exp{
+    public:
+        Exp* _LHS;
+        Exp* _RHS;
+
+        Multiplication(Exp* __LHS, Exp* __RHS) : _LHS(__LHS), _RHS(__RHS) {}
+    };
+
+    class Modulo : public Exp{
+    public:
+        Exp* _LHS;
+        Exp* _RHS;
+
+        Modulo(Exp* __LHS, Exp* __RHS) : _LHS(__LHS), _RHS(__RHS) {}
+    };
+
+    class Addition : public Exp{
+    public:
+        Exp* _LHS;
+        Exp* _RHS;
+
+        Addition(Exp* __LHS, Exp* __RHS) : _LHS(__LHS), _RHS(__RHS) {}
+    };
+
+    class Subtraction : public Exp{
+    public:
+        Exp* _LHS;
+        Exp* _RHS;
+
+        Subtraction(Exp* __LHS, Exp* __RHS) : _LHS(__LHS), _RHS(__RHS) {}
+    };
+    class LeftShift : public Exp{
+    public:
+        Exp* _LHS;
+        Exp* _RHS;
+
+        LeftShift(Exp* __LHS, Exp* __RHS) : _LHS(__LHS), _RHS(__RHS) {}
+    };
+    class RightShift : public Exp{
+    public:
+        Exp* _LHS;
+        Exp* _RHS;
+
+        RightShift(Exp* __LHS, Exp* __RHS) : _LHS(__LHS), _RHS(__RHS) {}
+    };
+    class LogicGT : public Exp{
+    public:
+        Exp* _LHS;
+        Exp* _RHS;
+
+        LogicGT(Exp* __LHS, Exp* __RHS) : _LHS(__LHS), _RHS(__RHS) {}
+    };
+    class LogicGE : public Exp{
+    public:
+        Exp* _LHS;
+        Exp* _RHS;
+
+        LogicGE(Exp* __LHS, Exp* __RHS) : _LHS(__LHS), _RHS(__RHS) {}
+    };
+    class LogicLT : public Exp{
+    public:
+        Exp* _LHS;
+        Exp* _RHS;
+
+        LogicLT(Exp* __LHS, Exp* __RHS) : _LHS(__LHS), _RHS(__RHS) {}
+    };
+    class LogicLE : public Exp{
+    public:
+        Exp* _LHS;
+        Exp* _RHS;
+
+        LogicLE(Exp* __LHS, Exp* __RHS) : _LHS(__LHS), _RHS(__RHS) {}
+    };
+    class LogicEQ : public Exp{
+    public:
+        Exp* _LHS;
+        Exp* _RHS;
+
+        LogicEQ(Exp* __LHS, Exp* __RHS) : _LHS(__LHS), _RHS(__RHS) {}
+    };
+    class LogicNEQ : public Exp{
+    public:
+        Exp* _LHS;
+        Exp* _RHS;
+
+        LogicNEQ(Exp* __LHS, Exp* __RHS) : _LHS(__LHS), _RHS(__RHS) {}
+    };
+
+    class BitwiseAND : public Exp {
+	public:
+		Exp* _LHS;
+		Exp* _RHS;
+		BitwiseAND(Exp* __LHS, Exp* __RHS) : _LHS(__LHS), _RHS(__RHS) {}
+		~BitwiseAND(void) {}
+	};
+
+	class BitwiseXOR : public Exp {
+	public:
+		Exp* _LHS;
+		Exp* _RHS;
+		BitwiseXOR(Exp* __LHS, Exp* __RHS) : _LHS(__LHS), _RHS(__RHS) {}
+		~BitwiseXOR(void) {}
+	};
+
+	class BitwiseOR : public Exp {
+	public:
+		Exp* _LHS;
+		Exp* _RHS;
+		BitwiseOR(Exp* __LHS, Exp* __RHS) : _LHS(__LHS), _RHS(__RHS) {}
+		~BitwiseOR(void) {}
+	};
+
+	class LogicAND : public Exp {
+	public:
+		Exp* _LHS;
+		Exp* _RHS;
+		LogicAND(Exp* __LHS, Exp* __RHS) : _LHS(__LHS), _RHS(__RHS) {}
+		~LogicAND(void) {}
+	};
+
+	class LogicOR : public Exp {
+	public:
+		Exp* _LHS;
+		Exp* _RHS;
+		LogicOR(Exp* __LHS, Exp* __RHS) : _LHS(__LHS), _RHS(__RHS) {}
+		~LogicOR(void) {}
+	};
+
+    class TernaryCondition : public Exp {
+	public:
+		Exp* _Condition;
+		Exp* _Then;
+		Exp* _Else;
+		TernaryCondition(Exp* __Condition, Exp* __Then, Exp* __Else) : _Condition(__Condition), _Then(__Then), _Else(__Else) {}
+		~TernaryCondition(void) {}
+	};
+
+	class DirectAssign : public Exp {
+	public:
+		Exp* _LHS;
+		Exp* _RHS;
+		DirectAssign(Exp* __LHS, Exp* __RHS) : _LHS(__LHS), _RHS(__RHS) {}
+		~DirectAssign(void) {}
+	};
+
+	class DivAssign : public Exp {
+	public:
+		Exp* _LHS;
+		Exp* _RHS;
+		DivAssign(Exp* __LHS, Exp* __RHS) : _LHS(__LHS), _RHS(__RHS) {}
+		~DivAssign(void) {}
+	};
+
+	class MulAssign : public Exp {
+	public:
+		Exp* _LHS;
+		Exp* _RHS;
+		MulAssign(Exp* __LHS, Exp* __RHS) : _LHS(__LHS), _RHS(__RHS) {}
+		~MulAssign(void) {}
+	};
+
+	class ModAssign : public Exp {
+	public:
+		Exp* _LHS;
+		Exp* _RHS;
+		ModAssign(Exp* __LHS, Exp* __RHS) : _LHS(__LHS), _RHS(__RHS) {}
+		~ModAssign(void) {}
+	};
+
+	class AddAssign : public Exp {
+	public:
+		Exp* _LHS;
+		Exp* _RHS;
+		AddAssign(Exp* __LHS, Exp* __RHS) : _LHS(__LHS), _RHS(__RHS) {}
+		~AddAssign(void) {}
+	};
+
+	class SubAssign : public Exp {
+	public:
+		Exp* _LHS;
+		Exp* _RHS;
+		SubAssign(Exp* __LHS, Exp* __RHS) : _LHS(__LHS), _RHS(__RHS) {}
+		~SubAssign(void) {}
+	};
+
+	class SHLAssign : public Exp {
+	public:
+		Exp* _LHS;
+		Exp* _RHS;
+		SHLAssign(Exp* __LHS, Exp* __RHS) : _LHS(__LHS), _RHS(__RHS) {}
+		~SHLAssign(void) {}
+	};
+	class SHRAssign : public Exp {
+	public:
+		Exp* _LHS;
+		Exp* _RHS;
+		SHRAssign(Exp* __LHS, Exp* __RHS) : _LHS(__LHS), _RHS(__RHS) {}
+		~SHRAssign(void) {}
+	};
+
+	class BitwiseANDAssign : public Exp {
+	public:
+		Exp* _LHS;
+		Exp* _RHS;
+		BitwiseANDAssign(Exp* __LHS, Exp* __RHS) : _LHS(__LHS), _RHS(__RHS) {}
+		~BitwiseANDAssign(void) {}
+	};
+
+	class BitwiseXORAssign : public Exp {
+	public:
+		Exp* _LHS;
+		Exp* _RHS;
+		BitwiseXORAssign(Exp* __LHS, Exp* __RHS) : _LHS(__LHS), _RHS(__RHS) {}
+		~BitwiseXORAssign(void) {}
+	};
+
+	class BitwiseORAssign : public Exp {
+	public:
+		Exp* _LHS;
+		Exp* _RHS;
+		BitwiseORAssign(Exp* __LHS, Exp* __RHS) : _LHS(__LHS), _RHS(__RHS) {}
+		~BitwiseORAssign(void) {}
+	};
 
 
     class Def : public Stm{
@@ -212,15 +480,9 @@ namespace AST {
 
     class FuncDef: public Def{
     public:
-
-        
-
         VarType* _RetType;
-
         std::string _Name;
-
         ParmList* _ParmList;
-
         Block* _FuncBody;
 
         FuncDef( VarType* _RetType, std::string _Name, ParmList* _ParmList, Block* _FuncBody):
@@ -232,9 +494,7 @@ namespace AST {
     //parameter 
     class Parm: public Node{
     public:
-
         std::string _Name;
-
         VarType* _Type;
 
         Parm(VarType* _Type, const std::string& _Name = ""): _Name(_Name), _Type(_Type) {}
@@ -282,7 +542,8 @@ namespace AST {
 			_Char,
 			_Float,
 			_Double,
-			_Void
+			_Void,
+            _String
 		};
 
         VarType() : _isConst(false) {};
