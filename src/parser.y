@@ -188,7 +188,7 @@ _MemberList:
 			;
         
 ParmList:
-            _ParaList COMMA Parm                                {  $$ = $1; $$->push_back(*$3);  }
+            _ParmList COMMA Parm                                {  $$ = $1; $$->push_back(*$3);  }
             | Parm                                              {  $$ = new AST::Parms(); $$->push_back(*$1); }
             ;
         

@@ -203,7 +203,7 @@ int ParmList::GenGraphNode() {
     ss << "}\n";
     
     if (_Parms.size() > 0) {
-        for (auto i in _Parms) {
+        for (auto i: _Parms) {
             int ch = i->GenGraphNode();
             ss << "N" << id << ":c1->N" << ch << "\n";
         }
@@ -261,7 +261,7 @@ int TypeDef::GenGraphNode() {
     ss << "N" << id << "{ TypeDef | ";
     ss << "_Alias = \"" << _Alias << "\"";
     ss << " |{";
-    ss << "<c1>_VarType"
+    ss << "<c1>_VarType";
     ss << "}\n";
     
     if (_VarType) {
@@ -287,7 +287,7 @@ int PointerType::GenGraphNode() {
     ss << "N" << id << "{ PointerType | ";
     ss << "_isConst = \"" << _isConst << "\"";
     ss << " |{";
-    ss << "<c1>_BaseType"
+    ss << "<c1>_BaseType";
     ss << "}\n";
     
     if (_BaseType) {
@@ -304,7 +304,7 @@ int ArrayType::GenGraphNode() {
     ss << "_isConst = \"" << _isConst << "\"\n";
     ss << "_Length = \"" << _Length << "\"";
     ss << " |{";
-    ss << "<c1>_BaseType"
+    ss << "<c1>_BaseType";
     ss << "}\n";
     
     if (_BaseType) {
@@ -320,7 +320,7 @@ int StructType::GenGraphNode() {
     ss << "N" << id << "{ StructType | ";
     ss << "_isConst = \"" << _isConst << "\"";
     ss << " |{";
-    ss << "<c1>_Member"
+    ss << "<c1>_Member";
     ss << "}\n";
     
     if (_Member) {
@@ -334,8 +334,8 @@ int StructType::GenGraphNode() {
 int StructMember::GenGraphNode() {
     int id = ++ counter;
     ss << "N" << id << "{ StructMember | |{";
-    ss << "<c1>_Type | "
-    ss << "<c2>_MemberList"
+    ss << "<c1>_Type | ";
+    ss << "<c2>_MemberList";
     ss << "}\n";
     
     if (_Type) {

@@ -15,6 +15,7 @@
 #include <cstdio>
 #include <cstring>
 #include <iostream>
+#include <sstream>
 #include <llvm/IR/Value.h>
 #include <string>
 #include <vector>
@@ -93,7 +94,7 @@ namespace AST {
         Defs* _Defs;
 
         Program(Defs* _Defs) :_Defs(_Defs) {}
-        int GenGraphNode() {}
+        int GenGraphNode();
     };
 
     class Stm : public Node{
@@ -110,7 +111,7 @@ namespace AST {
         Block* _Else;
 
         IfStm(Exp* _Condition, Block* _Then, Block* _Else = NULL): _Condition(_Condition), _Then(_Then), _Else(_Else) {}
-        int GenGraphNode() {}
+        int GenGraphNode();
     };
 
     class WhileStm : public Stm{
@@ -119,7 +120,7 @@ namespace AST {
         Block* _LoopBody;
 
         WhileStm(Exp* _Condition, Block* _Loopbody): _Condition(_Condition), _LoopBody(_Loopbody) {}
-        int GenGraphNode() {}
+        int GenGraphNode();
     };
 
     class ForStm : public Stm{
@@ -131,21 +132,21 @@ namespace AST {
 
         ForStm(Stm* _Initial, Exp* _Condition, Stm* _ExecuteInst, Block* _Loopbody):
                  _Initial(_Initial), _Condition(_Condition), _ExecuteInst(_ExecuteInst), _LoopBody(_LoopBody) {}
-        int GenGraphNode() {}
+        int GenGraphNode();
     };
 
     class BreakStm : public Stm{
     public:
         BreakStm() {}
         ~BreakStm() {}
-        int GenGraphNode() {}
+        int GenGraphNode();
     };
 
     class ContinueStm : public Stm{
     public:
         ContinueStm() {}
         ~ContinueStm() {}
-        int GenGraphNode() {}
+        int GenGraphNode();
     };
 
     class ReturnStm : public Stm{
@@ -153,7 +154,7 @@ namespace AST {
         Exp* _ReturnValue;
 
         ReturnStm(Exp* _ReturnValue = NULL): _ReturnValue(_ReturnValue){}
-        int GenGraphNode() {}
+        int GenGraphNode();
     };
 
     class Block : public Stm{
@@ -161,7 +162,7 @@ namespace AST {
         Stms* _Stms; 
 
         Block(Stms* _Stms): _Stms(_Stms) {}
-        int GenGraphNode() {}
+        int GenGraphNode();
     };
 
     class Exp : public Stm{
@@ -177,7 +178,7 @@ namespace AST {
 
         Variable(){}
         ~Variable(){}
-        int GenGraphNode() {}
+        int GenGraphNode();
     };
 
     class Constant : public Exp {
@@ -201,7 +202,7 @@ namespace AST {
         Constant(const std::string& __String) :
 			_Type(VarType::TypeID::_String), _Bool(false), _Character('\0'), _Integer(0), _Real(0.0), _String(__String) {}
 		~Constant(void) {}
-	    int GenGraphNode() {}
+	    int GenGraphNode();
     };
 
     class ArraySubscript : public Exp {
@@ -475,7 +476,7 @@ namespace AST {
     public:
         Def() {}
         ~Def() {}
-        virtual int GenGraphNode() {}
+        virtual int GenGraphNode();
     };
 
     class FuncDef: public Def{
@@ -488,7 +489,7 @@ namespace AST {
         FuncDef( VarType* _RetType, std::string _Name, ParmList* _ParmList, Block* _FuncBody):
                 _Name(_Name), _RetType(_RetType), _ParmList(_ParmList), _FuncBody(_FuncBody) {}
 
-        int GenGraphNode() {}
+        int GenGraphNode();
     };
 
     //parameter 
@@ -499,7 +500,7 @@ namespace AST {
 
         Parm(VarType* _Type, const std::string& _Name = ""): _Name(_Name), _Type(_Type) {}
 
-        int GenGraphNode() {}
+        int GenGraphNode();
     };
 
     class ParmList: public Node{
@@ -507,7 +508,7 @@ namespace AST {
         Parms _Parms;
 
         ParmList(Parms _Parms): _Parms(_Parms){}
-        int GenGraphNode() {}
+        int GenGraphNode();
     };
 
     class VarDef : public Def{
@@ -517,7 +518,7 @@ namespace AST {
 
         VarDef(VarType* _Type, VarList* _VarList): _Type(_Type),_VarList(_VarList) {};
 
-        int GenGraphNode() {}
+        int GenGraphNode();
     };
 
     class VarInit : public Node{
@@ -527,7 +528,7 @@ namespace AST {
 
         VarInit(const std::string& _Name, Exp* _InitialExp = NULL): _Name(_Name), _InitialExp(_InitialExp) {}
 
-        int GenGraphNode() {}
+        int GenGraphNode();
     };
 
     class VarType : public Node{
@@ -552,7 +553,7 @@ namespace AST {
         void SetConst(void) {
 			this->_isConst = true;
 		}
-        virtual int GenGraphNode() {}
+        virtual int GenGraphNode();
     };
 
     class TypeDef : public Def {
@@ -565,7 +566,7 @@ namespace AST {
 		TypeDef(VarType* __VarType, const std::string& __Alias) :
 			_VarType(__VarType), _Alias(__Alias) {}
 		~TypeDef() {}
-	    int GenGraphNode() {}
+	    int GenGraphNode();
     };
 
     class DefinedType : public VarType{
@@ -574,7 +575,7 @@ namespace AST {
 
         DefinedType(const std::string& __Name) : _Name(__Name) {}
 		~DefinedType(void) {}
-        int GenGraphNode() {}
+        int GenGraphNode();
     };
 
     class PointerType : public VarType{
@@ -583,7 +584,7 @@ namespace AST {
 
         PointerType(VarType* __BaseType) : _BaseType(__BaseType) {}
 		~PointerType(void) {}
-        int GenGraphNode() {}
+        int GenGraphNode();
     };
 
     class ArrayType : public VarType{
@@ -594,7 +595,7 @@ namespace AST {
         ArrayType(VarType* __BaseType, uint16_t __Length) : _BaseType(__BaseType), _Length(__Length) {}
 		ArrayType(VarType* __BaseType) : _BaseType(__BaseType), _Length(0) {}
 		~ArrayType(void) {}
-        int GenGraphNode() {}
+        int GenGraphNode();
     };
 
     class StructType : public VarType{
@@ -602,7 +603,7 @@ namespace AST {
         StructMembers* _Member;
         
         StructType(StructMembers* __Member) : _Member(__Member) {}
-        int GenGraphNode() {}
+        int GenGraphNode();
     };
 
     class StructMember : public Def{
@@ -611,56 +612,56 @@ namespace AST {
         MemberList* _MemberList;
 
         StructMember(VarType* __Type, MemberList* __MemberList) : _Type(__Type), _MemberList(__MemberList) {}
-        int GenGraphNode() {}
+        int GenGraphNode();
     };
 
     class IntType : public VarType{
     public:
         IntType(){}
         ~IntType(){}
-        int GenGraphNode() {}
+        int GenGraphNode();
     };
 
     class CharType : public VarType{
     public:
         CharType(){}
         ~CharType(){}
-        int GenGraphNode() {}
+        int GenGraphNode();
     };
 
     class FloatType : public VarType{
     public:
         FloatType(){}
         ~FloatType(){}
-        int GenGraphNode() {}
+        int GenGraphNode();
     };
 
     class DoubleType : public VarType{
     public:
         DoubleType(){}
         ~DoubleType(){}
-        int GenGraphNode() {}
+        int GenGraphNode();
     };
 
     class StringType : public VarType{
     public:
         StringType(){}
         ~StringType(){}
-        int GenGraphNode() {}
+        int GenGraphNode();
     };
 
     class BoolType : public VarType{
     public:
         BoolType(){}
         ~BoolType(){}
-        int GenGraphNode() {}
+        int GenGraphNode();
     };
 
     class VoidType : public VarType{
     public:
         VoidType(){}
         ~VoidType(){}
-        int GenGraphNode() {}
+        int GenGraphNode();
     };
 
     
