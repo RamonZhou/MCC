@@ -27,6 +27,7 @@ char Escape2Char(char ch){
 }
 %}
 
+%option yylineno
 %option never-interactive
 %option outfile="lexer.cpp"
 
@@ -88,10 +89,6 @@ char Escape2Char(char ch){
 "else"													{return ELSE;}
 "for"													{return FOR;}
 "while"													{return WHILE;}
-"do"													{return DO;}
-"switch"												{return SWITCH;}
-"case"													{return CASE;}
-"default"												{return DEFAULT;}
 "continue"												{return CONTINUE;}
 "return"												{return RETURN;}
 "true"													{return TRUE; }

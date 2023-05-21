@@ -43,13 +43,17 @@ int main(int argc, char* argv[]) {
     yyparse();
 
     if (outputGraph) {
-        AST::counter = 0;
-        AST::ss.clear();
-        Root->GenGraphNode;
-        string graph;
-        AST::ss >> graph;
+        int counter = 0;
+        stringstream ss;
+        ss << "digraph tree {\n"
+            "fontname = \"times\"\n"
+            "fontsize = 12\n"
+            "node[shape = record, fontname = \"times\"]\n";
+        Root->GenGraphNode(counter, ss);
+        ss << "}" << endl;
         std::ofstream dotfile("graph.dot");
-	    dotfile << OutputString;
+	    dotfile << ss.str() << endl;
+        dotfile.close();
     }
     return 0;
 }

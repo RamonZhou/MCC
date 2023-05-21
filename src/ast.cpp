@@ -1,5 +1,5 @@
 #include "ast.hpp"
-#include "CodeGenerator.hpp"
+#include "codegen.hpp"
 #include "utils.hpp"
 
 namespace AST {

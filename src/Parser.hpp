@@ -126,7 +126,8 @@ extern int yydebug;
     IDENTIFIER = 332,
     REAL = 333,
     CHARACTER = 334,
-    STRING = 335
+    STRING = 335,
+    FUNC_CALL_ARG_LIST = 336
   };
 #endif
 
@@ -134,7 +135,7 @@ extern int yydebug;
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 union YYSTYPE
 {
-#line 19 "parser.y"
+#line 20 "parser.y"
 
     int iVal;
     std::string *sVal;
@@ -166,11 +167,6 @@ union YYSTYPE
     AST::StructMember *structMember;
     AST::MemberList *memberList;
 
-
-    AST::MemberList *memberList;
-    AST::Parms *parms;
-    AST::Parm *parm;
-
     AST::TypeDef *typeDef;
     AST::VarType *varType;
 
@@ -186,8 +182,6 @@ union YYSTYPE
     AST::Block *block;
     AST::Parm *parm;
     AST::Parms *parms;
-    AST::VarInit *varInit;
-    AST::VarList *varList;
 
     AST::Exp *exp;
     AST::Exps *exps;
@@ -195,7 +189,7 @@ union YYSTYPE
     AST::Constant* constant;
 	
 
-#line 199 "Parser.hpp"
+#line 193 "parser.hpp"
 
 };
 typedef union YYSTYPE YYSTYPE;
