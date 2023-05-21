@@ -1,5 +1,5 @@
 %{
-#include "AST.hpp"
+#include "ast.hpp"
 #include "Parser.hpp"
 #include <stdio.h>
 #include <string>

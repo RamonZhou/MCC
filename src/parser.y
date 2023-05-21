@@ -22,15 +22,40 @@ AST::Program *Root;
     double dVal;
     char cVal;
 	std::string *strVal;
+
     AST::Program *program;
 
     AST::Def *def;
     AST::Defs *defs; 
     AST::FuncDef *funcDef;
     AST::VarDef *varDef;
+        AST::VarList *varList;
+        AST::VarInit *varInit;
+    AST::IntType *intType;
+    AST::CharType *charType;
+    AST::FloatType *floatType;
+    AST::DoubleType *doubleType;
+    AST::StringType *stringType;
+    AST::BoolType *boolType;
+    AST::VoidType *voidType;
+    AST::StructType *structType;
+    AST::PointerType *pointerType;
+    AST::ArrayType *arrayType;
+    AST::DefinedType *definedType;
+
+    AST::StructMembers *structMembers;
+    AST::StructMember *structMember;
+    AST::MemberList *memberList;
+
+
+    AST::MemberList *memberList;
+    AST::Parms *parms;
+    AST::Parm *parm;
+
     AST::TypeDef *typeDef;
     AST::VarType *varType;
 
+    AST::Stms *stms;
     AST::Stm *stm;
     AST::IfStm *ifStm;
     AST::ForStm *forStm;
@@ -38,16 +63,18 @@ AST::Program *Root;
     AST::BreakStm* breakStm;
 	AST::ContinueStm* continueStm;
     AST::ReturnStm *returnStm;
-    AST::Stms *stms;
+
     AST::Block *block;
     AST::Parm *parm;
-    AST::ParmList *parmList;
+    AST::Parms *parms;
     AST::VarInit *varInit;
     AST::VarList *varList;
 
-    AST::Expr *expr;
+    AST::Exp *exp;
+    AST::Exps *exps;
+    AST::ArraySubscript *arraySubscript;
     AST::Constant* constant;
-	AST::ExprList* exprList;
+	
 }
 
 %token  COMMA ELLIPSES DOT SQUOTE DQUOTE SEMI QUES COLON
@@ -70,38 +97,37 @@ AST::Program *Root;
 %token<cVal> CHARACTER
 %token<strVal> STRING
 %type<program>							Program	
+
 %type<def>								Def	
 %type<defs>							    Defs
 %type<funcDef>							FuncDef	
-%type<varDef>							VarDef	
-%type<typeDef>							TypeDef	
-%type<varType>							VarType _VarType
-%type<builtInType>						BuiltInType
-%type<fieldDecls>						FieldDecls
-%type<fieldDecl>						FieldDecl
-%type<memList>							MemList _MemList	
-%type<stmt>								Stmt
-%type<ifStmt>							IfStmt
-%type<forStmt>							ForStmt
-%type<whileStmt>						WhileStmt
-%type<doStmt>							DoStmt
-%type<switchStmt>						SwitchStmt
-%type<caseList>							CaseList
-%type<caseStmt>							CaseStmt
-%type<breakStmt>						BreakStmt
-%type<continueStmt>						ContinueStmt
-%type<returnStmt>						ReturnStmt
-%type<stmts>							Stmts
+%type<varType>                          VarType Type
+%type<varType>                          VarType
+%type<structMembers>                    StructMembers
+%type<structMember>                     StructMember
+%type<memberList>                       MemberList _MemberList
+%type<parms>                            ParmList
+%type<parm>                             Parm
 %type<block>							Block
-%type<arg>								Arg
-%type<argList>							ArgList _ArgList
-%type<varInit>							VarInit	
-%type<varList>							VarList _VarList
-%type<expr>								Expr	
+%type<varDef>							VarDef	
+%type<varList>                          VarList _VarList
+%type<varInit>                          VarInit
+
+%type<Stms>							    Stms
+%type<Stm>								Stm
+%type<ifStm>							IfStm
+%type<forStm>							ForStm
+%type<whileStm>						    WhileStm
+%type<breakStm>						    BreakStm
+%type<continueStm>						ContinueStm
+%type<returnStm>						ReturnStm
+%type<typeDef>							TypeDef	
+
+%type<exp>								Exp
+%type<exps>                             Exps _Exps
+%type<arraySubscript>                   ArraySubscript	
 %type<constant>							Constant
-%type<exprList>							ExprList _ExprList
-%type<enm>								Enm
-%type<enmList>							EnmList	_EnmList
+
 
 %start Program
 %%
@@ -167,13 +193,13 @@ ParmList:
             ;
         
 Parm:       VarType IDENTIFIER                                  {  $$ = new AST::Parm($1,*$2);   }
-            | VarType                                           {  $$ = new AST::5($1);   }
+            | VarType                                           {  $$ = new AST::Parm($1);   }
             ;
 
 Block:		LBRACE Stms RBRACE										{  $$ = new AST::Block($2);   }
 			;
 
-VarDef:     VarType VarList SEMI                                {  $$ = new AST::VarDecl($1,$2);   }
+VarDef:     VarType VarList SEMI                                {  $$ = new AST::VarDef($1,$2);   }
             ;
 
 VarList:    _VarList COMMA VarInit                              {  $$ = $1; $$->push_back($3);   }
@@ -206,12 +232,12 @@ Stm:		Exp SEMI												{  $$ = $1;   }
 			| SEMI													{  $$ = NULL;   }
 			;
 
-IfStm:		IF LPAREN Exp RPAREN Block ELSE Block					{  $$ = new AST::IfStmt($3,$5,$7);   }
-			| IF LPAREN Exp RPAREN Block         					{  $$ = new AST::IfStmt($3,$5);   }
+IfStm:		IF LPAREN Exp RPAREN Block ELSE Block					{  $$ = new AST::IfStm($3,$5,$7);   }
+			| IF LPAREN Exp RPAREN Block         					{  $$ = new AST::IfStm($3,$5);   }
             ;
 
-ForStm:	    FOR LPAREN Exp SEMI Exp SEMI Exp RPAREN Block			{  $$ = new AST::ForStmt($3,$5,$7,$9);   }
-            | FOR LPAREN VarDef Exp SEMI Exp RPAREN Block			{  $$ = new AST::ForStmt($3,$4,$6,$8);   }
+ForStm:	    FOR LPAREN Exp SEMI Exp SEMI Exp RPAREN Block			{  $$ = new AST::ForStm($3,$5,$7,$9);   }
+            | FOR LPAREN VarDef Exp SEMI Exp RPAREN Block			{  $$ = new AST::ForStm($3,$4,$6,$8);   }
 			;
 
 WhileStm:   WHILE LPAREN Exp RPAREN Block                           {  $$ = new AST::WhileStm($3,$5);  }
@@ -230,4 +256,62 @@ ReturnStm:  RETURN Exp SEMI                                         {  $$ = new 
 TypeDef:    TYPEDEF VarType IDENTIFIER SEMI                         {  $$ = new AST::TypeDef($2,*$3);  }
             ;
 
+Exp:        ArraySubscript                                          {  $$ = $1;  }
+            | IDENTIFIER                                            {  $$ = new AST::Variable($1);  }
+            | Constant                                              {  $$ = $1;  }
+            | SIZEOF LPAREN IDENTIFIER RPAREN						{  $$ = new AST::SizeOf(*$3);   }
+			| SIZEOF LPAREN Exp RPAREN								{  $$ = new AST::SizeOf($3);   }
+			| SIZEOF LPAREN VarType RPAREN							{  $$ = new AST::SizeOf($3);   }
+            | IDENTIFIER LPAREN Exps RPAREN						{  $$ = new AST::FuncCall(*$1,$3);   }
+            | NOT Exp												{  $$ = new AST::LogicNot($2);   }
+            | Exp DIV Exp											{  $$ = new AST::Division($1,$3);   }
+			| Exp MUL Exp											{  $$ = new AST::Multiplication($1,$3);   } 
+			| Exp MOD Exp 										{  $$ = new AST::Modulo($1,$3);   }
+			| Exp ADD Exp											{  $$ = new AST::Addition($1,$3);   } 
+			| Exp SUB Exp											{  $$ = new AST::Subtraction($1,$3);   } 
+            | Exp SHL Exp											{  $$ = new AST::LeftShift($1,$3);   } 
+			| Exp SHR Exp											{  $$ = new AST::RightShift($1,$3);   } 
+			| Exp GT Exp											{  $$ = new AST::LogicGT($1,$3);   } 
+			| Exp GE Exp											{  $$ = new AST::LogicGE($1,$3);   } 
+			| Exp LT Exp											{  $$ = new AST::LogicLT($1,$3);   } 
+			| Exp LE Exp											{  $$ = new AST::LogicLE($1,$3);   } 
+			| Exp EQ Exp											{  $$ = new AST::LogicEQ($1,$3);   } 
+			| Exp NEQ Exp											{  $$ = new AST::LogicNEQ($1,$3);   } 
+            | Exp BAND Exp										{  $$ = new AST::BitwiseAND($1,$3);   }
+			| Exp BXOR Exp										{  $$ = new AST::BitwiseXOR($1,$3);   }
+			| Exp BOR Exp											{  $$ = new AST::BitwiseOR($1,$3);   } 
+			| Exp AND Exp											{  $$ = new AST::LogicAND($1,$3);   } 
+			| Exp OR Exp											{  $$ = new AST::LogicOR($1,$3);   } 
+			| Exp QUES Exp COLON Exp								{  $$ = new AST::TernaryCondition($1,$3,$5);   }
+			| Exp ASSIGN Exp 										{  $$ = new AST::DirectAssign($1,$3);   } 
+			| Exp DIVEQ Exp 										{  $$ = new AST::DivAssign($1,$3);   } 
+			| Exp MULEQ Exp										{  $$ = new AST::MulAssign($1,$3);   }  
+			| Exp MODEQ Exp										{  $$ = new AST::ModAssign($1,$3);   } 
+			| Exp ADDEQ Exp										{  $$ = new AST::AddAssign($1,$3);   } 
+			| Exp SUBEQ Exp										{  $$ = new AST::SubAssign($1,$3);   } 
+			| Exp SHLEQ Exp										{  $$ = new AST::SHLAssign($1,$3);   } 
+			| Exp SHREQ Exp										{  $$ = new AST::SHRAssign($1,$3);   } 
+			| Exp BANDEQ Exp										{  $$ = new AST::BitwiseANDAssign($1,$3);   } 
+			| Exp BXOREQ Exp										{  $$ = new AST::BitwiseXORAssign($1,$3);   } 
+			| Exp BOREQ Exp										{  $$ = new AST::BitwiseORAssign($1,$3);   }
 
+ArraySubscript:
+            Exp LBRACKET Exp RBRACKET                        {  $$ = new AST::ArraySubscript(*$1,$3);  }
+            ;
+            
+Constant:	TRUE													{  $$ =  new AST::Constant(true);   }
+			| FALSE													{  $$ =  new AST::Constant(false);   }
+			| CHARACTER												{  $$ =  new AST::Constant($1);   }
+			| INTEGER 												{  $$ =  new AST::Constant($1);   }
+			| REAL													{  $$ =  new AST::Constant($1);   }
+			| STRING												{  $$ =  new AST::Constant(*$1);   }
+			;
+
+Exps:       _Exps COMMA Exp                                         {  $$ = $1; $$->push_back($3);  }
+            | Exp                                                   {  $$ = new AST::Exps(); $$->push_back($1);  }
+            |                                                       {  $$ = new AST:Exps();  }
+            ;
+
+_Exps:      _Exps COMMA Exp                                         {  $$ = $1; $$->push_back($3);  }  
+            | Exp                                                   {  $$ = new AST::Exps(); $$->push_back($1);  }
+            ;
