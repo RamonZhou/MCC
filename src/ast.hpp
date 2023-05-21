@@ -2,7 +2,7 @@
  * @Author: Theta 1467116498@qq.com
  * @Date: 2023-05-14 13:04:27
  * @LastEditors: Theta 1467116498@qq.com
- * @LastEditTime: 2023-05-18 15:38:21
+ * @LastEditTime: 2023-05-21 20:07:10
  * @FilePath: /MCC/src/ast.h
  * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
  */
@@ -161,7 +161,7 @@ namespace AST {
     public:
         std::string _Name;
 
-        Variable(){}
+        Variable(const std::string __Name): _Name(__Name){}
         ~Variable(){}
     };
 
@@ -215,12 +215,83 @@ namespace AST {
         FuncCall(const std::string& __FuncName, Exps* __ParmList) : _FuncName(__FuncName), _ParmList(__ParmList) {}
     };
 
-    class LogicNot : public Exp{
-    public:
-        Exp* _Op;
+    class UnaryPlus : public Exp {
+	public:
+		Exp* _Operand;
+		UnaryPlus(Exp* __Operand) : _Operand(__Operand) {}
+		~UnaryPlus(void) {}
+	};
 
-        LogicNot(Exp* __Op) : _Op(__Op) {}
-    };
+	class UnaryMinus : public Exp {
+	public:
+		Exp* _Operand;
+		UnaryMinus(Exp* __Operand) : _Operand(__Operand) {}
+		~UnaryMinus(void) {}
+	};
+
+	class TypeCast : public Exp {
+	public:
+		VarType* _VarType;
+		Exp* _Operand;
+		TypeCast(VarType* __VarType, Exp* __Operand) : _VarType(__VarType), _Operand(__Operand) {}
+		~TypeCast(void) {}
+	};
+
+	class PrefixInc : public Exp {
+	public:
+		Exp* _Operand;
+		PrefixInc(Exp* __Operand) : _Operand(__Operand) {}
+		~PrefixInc(void) {}
+	};
+
+	class PostfixInc : public Exp {
+	public:
+		Exp* _Operand;
+		PostfixInc(Exp* __Operand) : _Operand(__Operand) {}
+		~PostfixInc(void) {}
+	};
+
+	class PrefixDec : public Exp {
+	public:
+		Exp* _Operand;
+		PrefixDec(Exp* __Operand) : _Operand(__Operand) {}
+		~PrefixDec(void) {}
+	};
+
+	class PostfixDec : public Exp {
+	public:
+		Exp* _Operand;
+		PostfixDec(Exp* __Operand) : _Operand(__Operand) {}
+		~PostfixDec(void) {}
+	};
+
+	class Indirection : public Exp {
+	public:
+		Exp* _Operand;
+		Indirection(Exp* __Operand) : _Operand(__Operand) {}
+		~Indirection(void) {}
+	};
+
+	class AddressOf : public Exp {
+	public:
+		Exp* _Operand;
+		AddressOf(Exp* __Operand) : _Operand(__Operand) {}
+		~AddressOf(void) {}
+	};
+
+	class LogicNot : public Exp {
+	public:
+		Exp* _Operand;
+		LogicNot(Exp* __Operand) : _Operand(__Operand) {}
+		~LogicNot(void) {}
+	};
+
+	class BitwiseNot : public Exp {
+	public:
+		Exp* _Operand;
+		BitwiseNot(Exp* __Operand) : _Operand(__Operand) {}
+		~BitwiseNot(void) {}
+	};
 
     class Division : public Exp{
     public:
@@ -465,10 +536,10 @@ namespace AST {
     public:
         VarType* _RetType;
         std::string _Name;
-        ParmList* _ParmList;
+        Parms* _ParmList;
         Block* _FuncBody;
 
-        FuncDef( VarType* _RetType, std::string _Name, ParmList* _ParmList, Block* _FuncBody):
+        FuncDef( VarType* _RetType, const std::string _Name, Parms* _ParmList, Block* _FuncBody = NULL):
                 _Name(_Name), _RetType(_RetType), _ParmList(_ParmList), _FuncBody(_FuncBody) {}
 
     };

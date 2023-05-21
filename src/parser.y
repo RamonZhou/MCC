@@ -1,5 +1,5 @@
 %{
-#include "AST.hpp" 
+#include "ast.hpp" 
 #include <string>
 #include <iostream>
 
@@ -102,19 +102,18 @@ AST::Program *Root;
 %type<defs>							    Defs
 %type<funcDef>							FuncDef	
 %type<varType>                          VarType Type
-%type<varType>                          VarType
 %type<structMembers>                    StructMembers
 %type<structMember>                     StructMember
 %type<memberList>                       MemberList _MemberList
-%type<parms>                            ParmList
+%type<parms>                            ParmList _ParmList
 %type<parm>                             Parm
 %type<block>							Block
 %type<varDef>							VarDef	
 %type<varList>                          VarList _VarList
 %type<varInit>                          VarInit
 
-%type<Stms>							    Stms
-%type<Stm>								Stm
+%type<stms>							    Stms
+%type<stm>								Stm
 %type<ifStm>							IfStm
 %type<forStm>							ForStm
 %type<whileStm>						    WhileStm
@@ -128,6 +127,25 @@ AST::Program *Root;
 %type<arraySubscript>                   ArraySubscript	
 %type<constant>							Constant
 
+%nonassoc IF
+%nonassoc ELSE
+
+%left	COMMA //15
+%left	FUNC_CALL_ARG_LIST
+%right	ASSIGN ADDEQ SUBEQ MULEQ DIVEQ MODEQ SHLEQ SHREQ BANDEQ BOREQ BXOREQ //14
+%right	QUES COLON //13
+%left	OR//12
+%left	AND//11
+%left	BOR//10
+%left	BXOR//9
+%left	BAND//8
+%left	EQ NEQ//7
+%left	GE GT LE LT//6
+%left	SHL SHR//5
+%left	ADD SUB//4
+%left	MUL DIV MOD//3
+%right	DADD DSUB NOT BNOT SIZEOF//2
+%left	DOT ARW//1
 
 %start Program
 %%
@@ -188,8 +206,14 @@ _MemberList:
 			;
         
 ParmList:
-            _ParaList COMMA Parm                                {  $$ = $1; $$->push_back(*$3);  }
-            | Parm                                              {  $$ = new AST::Parms(); $$->push_back(*$1); }
+            _ParmList COMMA Parm                                {  $$ = $1; $$->push_back($3);  }
+            | Parm                                              {  $$ = new AST::Parms(); $$->push_back($1); }
+            |                                                   {  $$ = new AST::Parms(); }
+            ;
+
+_ParmList:
+            _ParmList COMMA Parm                                {  $$ = $1; $$->push_back($3);  }
+            | Parm                                              {  $$ = new AST::Parms(); $$->push_back($1); }
             ;
         
 Parm:       VarType IDENTIFIER                                  {  $$ = new AST::Parm($1,*$2);   }
@@ -256,14 +280,26 @@ ReturnStm:  RETURN Exp SEMI                                         {  $$ = new 
 TypeDef:    TYPEDEF VarType IDENTIFIER SEMI                         {  $$ = new AST::TypeDef($2,*$3);  }
             ;
 
-Exp:        ArraySubscript                                          {  $$ = $1;  }
-            | IDENTIFIER                                            {  $$ = new AST::Variable($1);  }
+Exp:        ArraySubscript  %prec ARW                               {  $$ = $1;  }
+            | IDENTIFIER                                            {  $$ = new AST::Variable(*$1);  }
             | Constant                                              {  $$ = $1;  }
             | SIZEOF LPAREN IDENTIFIER RPAREN						{  $$ = new AST::SizeOf(*$3);   }
 			| SIZEOF LPAREN Exp RPAREN								{  $$ = new AST::SizeOf($3);   }
 			| SIZEOF LPAREN VarType RPAREN							{  $$ = new AST::SizeOf($3);   }
             | IDENTIFIER LPAREN Exps RPAREN						{  $$ = new AST::FuncCall(*$1,$3);   }
-            | NOT Exp												{  $$ = new AST::LogicNot($2);   }
+
+            | ADD Exp	%prec NOT									{  $$ = new AST::UnaryPlus($2);   }
+			| SUB Exp	%prec NOT									{  $$ = new AST::UnaryMinus($2);   }
+			| LPAREN VarType RPAREN Exp %prec NOT					{  $$ = new AST::TypeCast($2,$4);   }
+			| DADD Exp	%prec NOT									{  $$ = new AST::PrefixInc($2);   }
+			| Exp DADD %prec ARW									{  $$ = new AST::PostfixInc($1);   }
+			| DSUB Exp %prec NOT									{  $$ = new AST::PrefixDec($2);   }
+			| Exp DSUB	%prec ARW									{  $$ = new AST::PostfixDec($1);   }
+			| MUL Exp	%prec NOT									{  $$ = new AST::Indirection($2);   }
+			| BAND Exp	%prec NOT									{  $$ = new AST::AddressOf($2);   }
+			| NOT Exp												{  $$ = new AST::LogicNot($2);   }
+			| BNOT Exp												{  $$ = new AST::BitwiseNot($2);   }
+
             | Exp DIV Exp											{  $$ = new AST::Division($1,$3);   }
 			| Exp MUL Exp											{  $$ = new AST::Multiplication($1,$3);   } 
 			| Exp MOD Exp 										{  $$ = new AST::Modulo($1,$3);   }
@@ -296,7 +332,7 @@ Exp:        ArraySubscript                                          {  $$ = $1; 
 			| Exp BOREQ Exp										{  $$ = new AST::BitwiseORAssign($1,$3);   }
 
 ArraySubscript:
-            Exp LBRACKET Exp RBRACKET                        {  $$ = new AST::ArraySubscript(*$1,$3);  }
+            Exp LBRACKET Exp RBRACKET %prec ARW	                       {  $$ = new AST::ArraySubscript($1,$3);  }
             ;
             
 Constant:	TRUE													{  $$ =  new AST::Constant(true);   }
@@ -308,10 +344,10 @@ Constant:	TRUE													{  $$ =  new AST::Constant(true);   }
 			;
 
 Exps:       _Exps COMMA Exp                                         {  $$ = $1; $$->push_back($3);  }
-            | Exp                                                   {  $$ = new AST::Exps(); $$->push_back($1);  }
-            |                                                       {  $$ = new AST:Exps();  }
+            | Exp  %prec FUNC_CALL_ARG_LIST                         {  $$ = new AST::Exps(); $$->push_back($1);  }
+            |                                                       {  $$ = new AST::Exps();  }
             ;
 
 _Exps:      _Exps COMMA Exp                                         {  $$ = $1; $$->push_back($3);  }  
-            | Exp                                                   {  $$ = new AST::Exps(); $$->push_back($1);  }
+            | Exp   %prec FUNC_CALL_ARG_LIST                        {  $$ = new AST::Exps(); $$->push_back($1);  }
             ;
