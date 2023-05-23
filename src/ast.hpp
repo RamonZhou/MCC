@@ -2,7 +2,7 @@
  * @Author: Theta 1467116498@qq.com
  * @Date: 2023-05-14 13:04:27
  * @LastEditors: Theta 1467116498@qq.com
- * @LastEditTime: 2023-05-21 20:07:10
+ * @LastEditTime: 2023-05-22 12:45:30
  * @FilePath: /MCC/src/ast.h
  * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
  */
@@ -256,6 +256,24 @@ namespace AST {
         Exps* _ParmList;
 
         FuncCall(const std::string& __FuncName, Exps* __ParmList) : _FuncName(__FuncName), _ParmList(__ParmList) {}
+        int GenGraphNode(GRAPHGEN_PARAMS);
+    };
+
+    class StructReference : public Exp {
+    public:
+        Exp* _Struct;
+        std::string _Member;
+
+        StructReference(Exp* __Struct, const std::string __Member): _Struct(__Struct), _Member(__Member) {}
+        int GenGraphNode(GRAPHGEN_PARAMS);
+    };
+
+    class StructDereference : public Exp {
+    public:
+        Exp* _Struct;
+        std::string _Member;
+
+        StructDereference(Exp* __Struct, const std::string __Member): _Struct(__Struct), _Member(__Member) {}
         int GenGraphNode(GRAPHGEN_PARAMS);
     };
 

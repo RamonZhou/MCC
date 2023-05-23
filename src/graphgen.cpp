@@ -234,6 +234,38 @@ int FuncCall::GenGraphNode(GRAPHGEN_PARAMS) {
     return id;
 }
 
+int StructReference::GenGraphNode(GRAPHGEN_PARAMS) {
+    int id = ++ counter;
+    ss << "N" << id << "[label = \"{ StructReference | ";
+    ss << "_Member = \\\"" << _Member << "\\\"";
+    ss << " |{";
+    ss << "<c1>_Struct";
+    ss << "} }\"]\n";
+    
+    if (_Struct) {
+        int ch = _Struct->GenGraphNode(counter, ss);
+        ss << "N" << id << ":c1->N" << ch << "\n";
+    }
+
+    return id;
+}
+
+int StructDereference::GenGraphNode(GRAPHGEN_PARAMS) {
+    int id = ++ counter;
+    ss << "N" << id << "[label = \"{ StructDereference | ";
+    ss << "_Member = \\\"" << _Member << "\\\"";
+    ss << " |{";
+    ss << "<c1>_Struct";
+    ss << "} }\"]\n";
+    
+    if (_Struct) {
+        int ch = _Struct->GenGraphNode(counter, ss);
+        ss << "N" << id << ":c1->N" << ch << "\n";
+    }
+
+    return id;
+}
+
 int UnaryPlus::GenGraphNode(GRAPHGEN_PARAMS) {
     int id = ++ counter;
     ss << "N" << id << "[label = \"{ UnaryPlus | |{";

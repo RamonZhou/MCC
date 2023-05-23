@@ -82,14 +82,14 @@ AST::Program *Root;
 		STRUCT UNION TYPEDEF CONST ENUM PTR ARRAY
 		IF ELSE FOR WHILE 
 		BREAK CONTINUE RETURN SIZEOF TRUE FALSE
-		BOOL SHORT INT LONG CHAR FLOAT DOUBLE VOID
+		BOOL SHORT INT LONG CHAR FLOAT DOUBLE VOID STRING
 
 
 %token<iVal> INTEGER
 %token<sVal> IDENTIFIER 
 %token<dVal> REAL
 %token<cVal> CHARACTER
-%token<strVal> STRING
+%token<strVal> STRINGCONST
 %type<program>							Program	
 
 %type<def>								Def	
@@ -103,7 +103,7 @@ AST::Program *Root;
 %type<parm>                             Parm
 %type<block>							Block
 %type<varDef>							VarDef	
-%type<varList>                          VarList _VarList
+%type<varList>                          VarList
 %type<varInit>                          VarInit
 
 %type<stms>							    Stms
@@ -220,13 +220,8 @@ Block:		LBRACE Stms RBRACE										{  $$ = new AST::Block($2);   }
 VarDef:     VarType VarList SEMI                                {  $$ = new AST::VarDef($1,$2);   }
             ;
 
-VarList:    _VarList COMMA VarInit                              {  $$ = $1; $$->push_back($3);   }
+VarList:    VarList COMMA VarInit                              {  $$ = $1; $$->push_back($3);   }
             | VarInit                                           {  $$ = new AST::VarList(); $$->push_back($1);   }
-            |                                                   {  $$ = new AST::VarList();   }
-            ;
-
-_VarList:   _VarList COMMA VarInit                              {  $$ = $1; $$->push_back($3);  }
-            | VarInit                                           {  $$ = new AST::VarList(); $$->push_back($1);  }
             ;
 
 VarInit:    IDENTIFIER                                          {  $$ = new AST::VarInit(*$1);  }
@@ -282,6 +277,9 @@ Exp:        ArraySubscript  %prec ARW                               {  $$ = $1; 
 			| SIZEOF LPAREN VarType RPAREN							{  $$ = new AST::SizeOf($3);   }
             | IDENTIFIER LPAREN Exps RPAREN						{  $$ = new AST::FuncCall(*$1,$3);   }
 
+            | Exp DOT IDENTIFIER                                    {  $$ = new AST::StructReference($1,*$3);  }
+            | Exp ARW IDENTIFIER                                    {  $$ = new AST::StructDereference($1,*$3);  }
+
             | ADD Exp	%prec NOT									{  $$ = new AST::UnaryPlus($2);   }
 			| SUB Exp	%prec NOT									{  $$ = new AST::UnaryMinus($2);   }
 			| LPAREN VarType RPAREN Exp %prec NOT					{  $$ = new AST::TypeCast($2,$4);   }
@@ -335,7 +333,7 @@ Constant:	TRUE													{  $$ =  new AST::Constant(true);   }
 			| CHARACTER												{  $$ =  new AST::Constant($1);   }
 			| INTEGER 												{  $$ =  new AST::Constant($1);   }
 			| REAL													{  $$ =  new AST::Constant($1);   }
-			| STRING												{  $$ =  new AST::Constant(*$1);   }
+			| STRINGCONST												{  $$ =  new AST::Constant(*$1);   }
 			;
 
 Exps:       _Exps COMMA Exp                                         {  $$ = $1; $$->push_back($3);  }

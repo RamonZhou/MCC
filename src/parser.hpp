@@ -122,12 +122,13 @@ extern int yydebug;
     FLOAT = 328,
     DOUBLE = 329,
     VOID = 330,
-    INTEGER = 331,
-    IDENTIFIER = 332,
-    REAL = 333,
-    CHARACTER = 334,
-    STRING = 335,
-    FUNC_CALL_ARG_LIST = 336
+    STRING = 331,
+    INTEGER = 332,
+    IDENTIFIER = 333,
+    REAL = 334,
+    CHARACTER = 335,
+    STRINGCONST = 336,
+    FUNC_CALL_ARG_LIST = 337
   };
 #endif
 
@@ -189,7 +190,7 @@ union YYSTYPE
     AST::Constant* constant;
 	
 
-#line 193 "parser.hpp"
+#line 194 "parser.hpp"
 
 };
 typedef union YYSTYPE YYSTYPE;

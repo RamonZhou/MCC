@@ -1,8 +1,50 @@
+/*
+ * @Author: Theta 1467116498@qq.com
+ * @Date: 2023-05-22 11:55:58
+ * @LastEditors: Theta 1467116498@qq.com
+ * @LastEditTime: 2023-05-22 13:34:46
+ * @FilePath: /MCC/src/test.txt
+ * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
+ */
 
 int main() {
     for (int i = 0; i < 5; ++ i) {
         int a = i;
         int b = a;
+        break;
+        continue;
     }
     int c = 1;
+
+    if(1){
+        if(2){
+            int a = 0;
+        }
+        else{
+            string b = "bbb";
+        }
+    }
+
+    for(int i = 1; i != 10; i ++){
+        int a = 0;
+        while(a<10){
+            a = a ^ 1;
+            break;
+        }
+        for(a;a < 100; ++a){
+            continue;
+        }
+    }
+
+    typedef struct
+    {
+        /* data */
+        int a;
+        double b;
+    } test;
+
+    test t;
+    t.a = 1;
+    t.b = 2.5;
+    
 }

@@ -1,6 +1,6 @@
 %{
 #include "ast.hpp"
-#include "Parser.hpp"
+#include "parser.hpp"
 #include <stdio.h>
 #include <string>
 #include <iostream>
@@ -102,6 +102,7 @@ char Escape2Char(char ch){
 "char"													{return CHAR; }
 "float"													{return FLOAT; }
 "double"												{return DOUBLE; }
+"string"												{return STRING;}
 "void"													{return VOID; }
 [ \t\n]													{ ; }
 "/*"[^*]*[*]+([^*/][^*]*[*]+)*"/"						{ ; }
@@ -124,7 +125,7 @@ char Escape2Char(char ch){
 																}else{
 																	yylval.strVal->push_back(yytext[i]);
 																}
-															return STRING;
+															return STRINGCONST;
 														}
 "\""													{return DQUOTE;}
 [a-zA-Z_][a-zA-Z0-9_]*									{ 
