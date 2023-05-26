@@ -16,19 +16,35 @@ int main(int argc, char* argv[]) {
     bool outputGraph = false; // -v
     bool optionError = false;
 
+    string outputfile = "a.out";
+    int optimizationLvl = 2;
+    string llcOptions = "";
+
     int optch = ' ';
-    while ((optch = getopt(argc, argv, "v")) != -1) {
+    while ((optch = getopt(argc, argv, "vo:O::")) != -1) {
         switch (optch) {
             case 'v':
                 outputGraph = true;
                 break;
+            case 'o':
+                outputfile = string(optarg);
+                break;
+            case 'O':
+                if (strlen(optarg) != 1 || optarg[0] < '0' || optarg[0] > '3') {
+                    cerr << "Optimizaion level option should be [-O0, -O1, -O2, or -O3], not '-O" << optarg << "'." << endl;
+                    optionError = true;
+                    break;
+                }
+                optimizationLvl = optarg[0] - '0';
             case '?': default:
                 cerr << "Unknown option -" << (char)optch << endl;
                 optionError = true;
         }
+        if (optionError) break;
     }
 
     if (optionError) return 1;
+    llcOptions = "-O" + to_string(optimizationLvl);
 
     if (optind >= argc) {
         cerr << "Please give the source file." << endl;
@@ -43,17 +59,35 @@ int main(int argc, char* argv[]) {
     yyparse();
 
     if (outputGraph) {
-        int counter = 0;
-        stringstream ss;
-        ss << "digraph tree {\n"
-            "fontname = \"times\"\n"
-            "fontsize = 12\n"
-            "node[shape = record, fontname = \"times\"]\n";
-        Root->GenGraphNode(counter, ss);
-        ss << "}" << endl;
-        std::ofstream dotfile("graph.dot");
-	    dotfile << ss.str() << endl;
-        dotfile.close();
+        // test if graphviz is installed or not
+        if(system("command -v dot >/dev/null 2>&1")) {
+            cerr << "Graphviz is not found. Not able to generate AST visualization.\n"
+                << "You could try: sudo apt-get install graphviz\n";
+        } else {
+            int counter = 0;
+            stringstream ss;
+            ss << "digraph tree {\n"
+                "fontname = \"times\"\n"
+                "fontsize = 12\n"
+                "node[shape = record, fontname = \"times\"]\n";
+            Root->GenGraphNode(counter, ss);
+            ss << "}" << endl;
+            std::ofstream dotfile("graph.dot");
+            dotfile << ss.str() << endl;
+            dotfile.close();
+            system("dot graph.dot -T png -o graph.png");
+        }
     }
+
+    unique_ptr<CodeGenContext> codeGenContext = make_unique<CodeGenContext>();
+    if (!codeGenContext->GenerateIRCode(Root)) {
+        cerr << "IR generation aborted." << endl;
+        return 1;
+    }
+    if (!codeGenContext->GenerateExecutable(outputfile, llcOptions)) {
+        cerr << "Exetuable building aborted." << endl;
+        return 1;
+    }
+
     return 0;
 }
