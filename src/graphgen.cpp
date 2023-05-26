@@ -145,7 +145,7 @@ int Variable::GenGraphNode(GRAPHGEN_PARAMS) {
     return id;
 }
 
-int Constant::GenGraphNode(GRAPHGEN_PARAMS) {
+int AST::Constant::GenGraphNode(GRAPHGEN_PARAMS) {
     int id = ++ counter;
     ss << "N" << id << "[label = \"{ Constant | ";
     ss << "_Type = " << _Type << "\\n";
@@ -166,7 +166,7 @@ int Constant::GenGraphNode(GRAPHGEN_PARAMS) {
             ss << "_Real = " << _Real;
             break;
         case VarType::TypeID::_String:
-            ss << "_String = " << _String;
+            ss << "_String = \\\"" << _String << "\\\"";
             break;
         default:
             break;
@@ -718,7 +718,7 @@ int DefinedType::GenGraphNode(GRAPHGEN_PARAMS) {
     return id;
 }
 
-int PointerType::GenGraphNode(GRAPHGEN_PARAMS) {
+int AST::PointerType::GenGraphNode(GRAPHGEN_PARAMS) {
     int id = ++ counter;
     ss << "N" << id << "[label = \"{ PointerType | ";
     ss << "_isConst = " << _isConst;
@@ -734,7 +734,7 @@ int PointerType::GenGraphNode(GRAPHGEN_PARAMS) {
     return id;
 }
 
-int ArrayType::GenGraphNode(GRAPHGEN_PARAMS) {
+int AST::ArrayType::GenGraphNode(GRAPHGEN_PARAMS) {
     int id = ++ counter;
     ss << "N" << id << "[label = \"{ ArrayType | ";
     ss << "_isConst = " << _isConst << "\\n";
@@ -751,7 +751,7 @@ int ArrayType::GenGraphNode(GRAPHGEN_PARAMS) {
     return id;
 }
 
-int StructType::GenGraphNode(GRAPHGEN_PARAMS) {
+int AST::StructType::GenGraphNode(GRAPHGEN_PARAMS) {
     int id = ++ counter;
     ss << "N" << id << "[label = \"{ StructType | ";
     ss << "_isConst = " << _isConst;
