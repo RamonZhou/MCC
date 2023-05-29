@@ -221,8 +221,8 @@ namespace AST {
         virtual bool isStruct() { return false; }
         virtual bool isString() { return false; }
         virtual bool isDefined() { return false; }
-        virtual Type *GetLLVMType(CODEGEN_PARAMS) {}
-        virtual Value *GenCode(CODEGEN_PARAMS) {}
+        virtual Type *GetLLVMType(CODEGEN_PARAMS) = 0;
+        virtual Value *GenCode(CODEGEN_PARAMS) = 0;
         virtual int GenGraphNode(GRAPHGEN_PARAMS);
     };
 
@@ -843,7 +843,7 @@ namespace AST {
         DefinedType(const std::string& __Name) : _Name(__Name) {}
 		~DefinedType(void) {}
         bool isDefined() { return true; }
-        Type *GetLLVMType(CODEGEN_PARAMS) {}
+        Type *GetLLVMType(CODEGEN_PARAMS);
         Value *GenCode(CODEGEN_PARAMS);
         int GenGraphNode(GRAPHGEN_PARAMS);
     };
@@ -855,7 +855,7 @@ namespace AST {
         PointerType(VarType* __BaseType) : _BaseType(__BaseType) {}
 		~PointerType(void) {}
         bool isPointer() { return true; }
-        Type *GetLLVMType(CODEGEN_PARAMS) {}
+        Type *GetLLVMType(CODEGEN_PARAMS);
         Value *GenCode(CODEGEN_PARAMS);
         int GenGraphNode(GRAPHGEN_PARAMS);
     };
@@ -896,7 +896,6 @@ namespace AST {
         MemberList* _MemberList;
 
         StructMember(VarType* __Type, MemberList* __MemberList) : _Type(__Type), _MemberList(__MemberList) {}
-        Type *GetLLVMType(CODEGEN_PARAMS);
         Value *GenCode(CODEGEN_PARAMS);
         int GenGraphNode(GRAPHGEN_PARAMS);
     };

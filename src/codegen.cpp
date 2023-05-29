@@ -112,6 +112,8 @@ bool CodeGenContext::GenerateIRCode(AST::Program *Root) {
     // Constant *printfFunc = mModule->getOrInsertFunction("printf", printfType);
     auto printf_func = Function::Create(printfType, GlobalValue::ExternalLinkage, "printf", mModule.get());
     AddGlobalDefinition("printf", SymbolType::tFunction);
+    auto scanf_func = Function::Create(printfType, GlobalValue::ExternalLinkage, "scanf", mModule.get());
+    AddGlobalDefinition("scanf", SymbolType::tFunction);
     
     Value *ret = Root->GenCode(this);
 
