@@ -8,6 +8,7 @@ CodeGenContext::CodeGenContext() {
     mModule = make_unique<Module>("main", mContext);
     curFunction = NULL;
     mGlobalSymbolTable = make_unique<SymbolTable>();
+    mStructTable = make_unique<StructTable>();
 }
 
 void CodeGenContext::PushScope() {
@@ -71,6 +72,15 @@ void CodeGenContext::AddGlobalDefinition(string name, CodeGenContext::SymbolType
 
 bool CodeGenContext::isDefinedGlobally(string name) {
     return mGlobalSymbolTable->find(name) != mGlobalSymbolTable->end();
+}
+
+void CodeGenContext::AddStructType(Type *type, AST::StructType *node) {
+    mStructTable->insert(make_pair(type, node));
+}
+
+AST::StructType *CodeGenContext::LookUpStructType(Type *type) {
+    if (mStructTable->find(type) == mStructTable->end()) return nullptr;
+    return mStructTable->at(type);
 }
 
 void CodeGenContext::PushLoopBlocks(BasicBlock *beginBlock, BasicBlock *endBlock) {

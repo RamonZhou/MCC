@@ -285,7 +285,7 @@ namespace AST {
         SizeOf(Exp* __Exp) : _Exp(__Exp), _VarType(NULL), _Identifier("") {}
         SizeOf(VarType* __VarType) : _Exp(NULL), _VarType(__VarType), _Identifier("") {}
         SizeOf(std::string __Identifier) : _Exp(NULL), _VarType(NULL), _Identifier(__Identifier) {}
-        Value *GenCode(CODEGEN_PARAMS);
+        Value *GenCode(CODEGEN_PARAMS) {return nullptr;}
         Value *GenPointer(CODEGEN_PARAMS) { return LogError("The function return value is a r-value.\n"); }
         int GenGraphNode(GRAPHGEN_PARAMS);
     };
@@ -359,8 +359,8 @@ namespace AST {
 		Exp* _Operand;
 		PrefixInc(Exp* __Operand) : _Operand(__Operand) {}
 		~PrefixInc(void) {}
-	    Value *GenCode(CODEGEN_PARAMS);
-        Value *GenPointer(CODEGEN_PARAMS);
+	    Value *GenCode(CODEGEN_PARAMS) {return nullptr;}
+        Value *GenPointer(CODEGEN_PARAMS) {return nullptr;}
         int GenGraphNode(GRAPHGEN_PARAMS);
     };
 
@@ -369,7 +369,7 @@ namespace AST {
 		Exp* _Operand;
 		PostfixInc(Exp* __Operand) : _Operand(__Operand) {}
 		~PostfixInc(void) {}
-	    Value *GenCode(CODEGEN_PARAMS);
+	    Value *GenCode(CODEGEN_PARAMS) {return nullptr;}
         Value *GenPointer(CODEGEN_PARAMS) { return LogError("Expected r-value, but found l-value.\n"); }
         int GenGraphNode(GRAPHGEN_PARAMS);
     };
@@ -379,8 +379,8 @@ namespace AST {
 		Exp* _Operand;
 		PrefixDec(Exp* __Operand) : _Operand(__Operand) {}
 		~PrefixDec(void) {}
-	    Value *GenCode(CODEGEN_PARAMS);
-        Value *GenPointer(CODEGEN_PARAMS);
+	    Value *GenCode(CODEGEN_PARAMS) {return nullptr;}
+        Value *GenPointer(CODEGEN_PARAMS) {return nullptr;}
         int GenGraphNode(GRAPHGEN_PARAMS);
     };
 
@@ -389,7 +389,7 @@ namespace AST {
 		Exp* _Operand;
 		PostfixDec(Exp* __Operand) : _Operand(__Operand) {}
 		~PostfixDec(void) {}
-	    Value *GenCode(CODEGEN_PARAMS);
+	    Value *GenCode(CODEGEN_PARAMS) {return nullptr;}
         Value *GenPointer(CODEGEN_PARAMS) { return LogError("Expected r-value, but found l-value.\n"); }
         int GenGraphNode(GRAPHGEN_PARAMS);
     };
@@ -631,7 +631,7 @@ namespace AST {
 		Exp* _Else;
 		TernaryCondition(Exp* __Condition, Exp* __Then, Exp* __Else) : _Condition(__Condition), _Then(__Then), _Else(__Else) {}
 		~TernaryCondition(void) {}
-	    Value *GenCode(CODEGEN_PARAMS);
+	    Value *GenCode(CODEGEN_PARAMS) {return nullptr;}
         Value *GenPointer(CODEGEN_PARAMS) { return LogError("Expected r-value, but found l-value.\n"); }
         int GenGraphNode(GRAPHGEN_PARAMS);
     };
@@ -653,7 +653,7 @@ namespace AST {
 		Exp* _RHS;
 		DivAssign(Exp* __LHS, Exp* __RHS) : _LHS(__LHS), _RHS(__RHS) {}
 		~DivAssign(void) {}
-	    Value *GenCode(CODEGEN_PARAMS);
+	    Value *GenCode(CODEGEN_PARAMS) {return nullptr;}
         Value *GenPointer(CODEGEN_PARAMS) { return LogError("Expected r-value, but found l-value.\n"); }
         int GenGraphNode(GRAPHGEN_PARAMS);
     };
@@ -664,7 +664,7 @@ namespace AST {
 		Exp* _RHS;
 		MulAssign(Exp* __LHS, Exp* __RHS) : _LHS(__LHS), _RHS(__RHS) {}
 		~MulAssign(void) {}
-	    Value *GenCode(CODEGEN_PARAMS);
+	    Value *GenCode(CODEGEN_PARAMS) {return nullptr;}
         Value *GenPointer(CODEGEN_PARAMS) { return LogError("Expected r-value, but found l-value.\n"); }
         int GenGraphNode(GRAPHGEN_PARAMS);
     };
@@ -675,7 +675,7 @@ namespace AST {
 		Exp* _RHS;
 		ModAssign(Exp* __LHS, Exp* __RHS) : _LHS(__LHS), _RHS(__RHS) {}
 		~ModAssign(void) {}
-	    Value *GenCode(CODEGEN_PARAMS);
+	    Value *GenCode(CODEGEN_PARAMS) {return nullptr;}
         Value *GenPointer(CODEGEN_PARAMS) { return LogError("Expected r-value, but found l-value.\n"); }
         int GenGraphNode(GRAPHGEN_PARAMS);
     };
@@ -686,7 +686,7 @@ namespace AST {
 		Exp* _RHS;
 		AddAssign(Exp* __LHS, Exp* __RHS) : _LHS(__LHS), _RHS(__RHS) {}
 		~AddAssign(void) {}
-	    Value *GenCode(CODEGEN_PARAMS);
+	    Value *GenCode(CODEGEN_PARAMS) {return nullptr;}
         Value *GenPointer(CODEGEN_PARAMS) { return LogError("Expected r-value, but found l-value.\n"); }
         int GenGraphNode(GRAPHGEN_PARAMS);
     };
@@ -697,7 +697,7 @@ namespace AST {
 		Exp* _RHS;
 		SubAssign(Exp* __LHS, Exp* __RHS) : _LHS(__LHS), _RHS(__RHS) {}
 		~SubAssign(void) {}
-	    Value *GenCode(CODEGEN_PARAMS);
+	    Value *GenCode(CODEGEN_PARAMS) {return nullptr;}
         Value *GenPointer(CODEGEN_PARAMS) { return LogError("Expected r-value, but found l-value.\n"); }
         int GenGraphNode(GRAPHGEN_PARAMS);
     };
@@ -708,7 +708,7 @@ namespace AST {
 		Exp* _RHS;
 		SHLAssign(Exp* __LHS, Exp* __RHS) : _LHS(__LHS), _RHS(__RHS) {}
 		~SHLAssign(void) {}
-	    Value *GenCode(CODEGEN_PARAMS);
+	    Value *GenCode(CODEGEN_PARAMS) {return nullptr;}
         Value *GenPointer(CODEGEN_PARAMS) { return LogError("Expected r-value, but found l-value.\n"); }
         int GenGraphNode(GRAPHGEN_PARAMS);
     };
@@ -718,7 +718,7 @@ namespace AST {
 		Exp* _RHS;
 		SHRAssign(Exp* __LHS, Exp* __RHS) : _LHS(__LHS), _RHS(__RHS) {}
 		~SHRAssign(void) {}
-	    Value *GenCode(CODEGEN_PARAMS);
+	    Value *GenCode(CODEGEN_PARAMS) {return nullptr;}
         Value *GenPointer(CODEGEN_PARAMS) { return LogError("Expected r-value, but found l-value.\n"); }
         int GenGraphNode(GRAPHGEN_PARAMS);
     };
@@ -729,7 +729,7 @@ namespace AST {
 		Exp* _RHS;
 		BitwiseANDAssign(Exp* __LHS, Exp* __RHS) : _LHS(__LHS), _RHS(__RHS) {}
 		~BitwiseANDAssign(void) {}
-	    Value *GenCode(CODEGEN_PARAMS);
+	    Value *GenCode(CODEGEN_PARAMS) {return nullptr;}
         Value *GenPointer(CODEGEN_PARAMS) { return LogError("Expected r-value, but found l-value.\n"); }
         int GenGraphNode(GRAPHGEN_PARAMS);
     };
@@ -740,7 +740,7 @@ namespace AST {
 		Exp* _RHS;
 		BitwiseXORAssign(Exp* __LHS, Exp* __RHS) : _LHS(__LHS), _RHS(__RHS) {}
 		~BitwiseXORAssign(void) {}
-	    Value *GenCode(CODEGEN_PARAMS);
+	    Value *GenCode(CODEGEN_PARAMS) {return nullptr;}
         Value *GenPointer(CODEGEN_PARAMS) { return LogError("Expected r-value, but found l-value.\n"); }
         int GenGraphNode(GRAPHGEN_PARAMS);
     };
@@ -751,7 +751,7 @@ namespace AST {
 		Exp* _RHS;
 		BitwiseORAssign(Exp* __LHS, Exp* __RHS) : _LHS(__LHS), _RHS(__RHS) {}
 		~BitwiseORAssign(void) {}
-	    Value *GenCode(CODEGEN_PARAMS);
+	    Value *GenCode(CODEGEN_PARAMS) {return nullptr;}
         Value *GenPointer(CODEGEN_PARAMS) { return LogError("Expected r-value, but found l-value.\n"); }
         int GenGraphNode(GRAPHGEN_PARAMS);
     };
@@ -880,12 +880,7 @@ namespace AST {
         
         StructType(StructMembers* __Member) : _Member(__Member) {}
         bool isStruct() { return true; }
-        Type *GetLLVMType(CODEGEN_PARAMS) {
-            if (_LLVMType) return _LLVMType;
-            _LLVMType = llvm::StructType::create(mContext, "struct?");
-            // TODO: context->AddStructType(_Name, _LLVMType);
-            return _LLVMType;
-        }
+        Type *GetLLVMType(CODEGEN_PARAMS);
         Value *GenCode(CODEGEN_PARAMS);
         int GenGraphNode(GRAPHGEN_PARAMS);
     };

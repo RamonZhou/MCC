@@ -62,6 +62,7 @@ public:
 
     using SymbolTable = unordered_map<string, SymbolType>;
     using ValueTable = unordered_map<string, Value *>;
+    using StructTable = unordered_map<Type *, AST::StructType *>;
 
     CodeGenContext();
     ~CodeGenContext() {}
@@ -76,6 +77,9 @@ public:
     SymbolType LookUpGlobalSymbolType(string name);
     void AddGlobalDefinition(string name, SymbolType type);
     bool isDefinedGlobally(string name);
+
+    void AddStructType(Type *type, AST::StructType *node);
+    AST::StructType *LookUpStructType(Type *type);
 
     void PushLoopBlocks(BasicBlock *beginBlock, BasicBlock *endBlock);
     void PopLoopBlocks();
@@ -95,4 +99,5 @@ private:
     deque<unique_ptr<SymbolTable>> mSymbolTables;
     deque<unique_ptr<ValueTable>> mValueTables;
     unique_ptr<SymbolTable> mGlobalSymbolTable;
+    unique_ptr<StructTable> mStructTable;
 };

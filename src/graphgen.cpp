@@ -773,7 +773,7 @@ int StructMember::GenGraphNode(GRAPHGEN_PARAMS) {
     int id = ++ counter;
     ss << "N" << id << "[label = \"{ StructMember | ";
     for (auto i: (*_MemberList)) {
-        ss << i << "\n";
+        ss << i << "\\n";
     }
     ss << " |{";
     ss << "<c1>_Type";

@@ -12,3 +12,6 @@ _deps
 *.dot
 *.png
 src/mcc
+src/a
+*.ll
+*.s
