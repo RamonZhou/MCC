@@ -1097,6 +1097,7 @@ Value *AST::VarDef::GenCode(CODEGEN_PARAMS) {
     if (type == nullptr) {
         return nullptr; //LogError("Type " + reinterpret_cast<AST::DefinedType *>(_Type)->_Name + " is not defined.\n");
     }
+    
     if (_Type->isVoid() && !_Type->isPointer()) {
         return LogError("Cannot define void variables.\n");
     }
@@ -1113,13 +1114,18 @@ Value *AST::VarDef::GenCode(CODEGEN_PARAMS) {
             }
             Value *initialExp = nullptr;
             if (var->_InitialExp) {
-                initialExp = var->_InitialExp->GenCode(context); // TODO: type casting
+                initialExp = var->_InitialExp->GenCode(context);
                 if (initialExp == nullptr) {
                     return nullptr;
                 }
             }
             AllocaInst *alloc = mBuilder.CreateAlloca(type, nullptr, var->_Name);
-            if (initialExp) mBuilder.CreateStore(initialExp, alloc);
+            if (initialExp) {
+                if (!(initialExp = TypeCastTo(initialExp, type))) {
+                    return LogError("Invalid type conversion while initializing.\n");
+                }
+                mBuilder.CreateStore(initialExp, alloc);
+            }
             context->AddDefinition(var->_Name, alloc, _Type->_isConst ?
                 CodeGenContext::SymbolType::tConstant : CodeGenContext::SymbolType::tVariable);
             ret = alloc;
@@ -1135,9 +1141,12 @@ Value *AST::VarDef::GenCode(CODEGEN_PARAMS) {
                 if (!var->_InitialExp->isConstant()) {
                     return LogError("Global variables can only be initialized with constants.\n");
                 }
-                Value *exp = var->_InitialExp->GenCode(context); // TODO: type casting
+                Value *exp = var->_InitialExp->GenCode(context);
                 if (exp == nullptr) {
                     return nullptr;
+                }
+                if (!(exp = TypeCastTo(exp, type))) {
+                    return LogError("Invalid type conversion while initializing.\n");
                 }
                 initialExp = reinterpret_cast<llvm::Constant *>(exp);
             }
@@ -1153,7 +1162,6 @@ Value *AST::VarDef::GenCode(CODEGEN_PARAMS) {
             ret = globalVar;
         }
     }
-
     return ret;
 }
 
