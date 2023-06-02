@@ -366,7 +366,7 @@ Value *AST::Constant::GenCode(CODEGEN_PARAMS) {
         case AST::VarType::_Bool:
             return mBuilder.getInt1(this->_Bool);
         case AST::VarType::_Char:
-            return mBuilder.getInt8(this->_Integer);
+            return mBuilder.getInt8(this->_Character);
         case AST::VarType::_Int:
             return mBuilder.getInt32(this->_Integer);
         case AST::VarType::_Float:
@@ -956,8 +956,9 @@ Value *AST::DirectAssign::GenCode(CODEGEN_PARAMS) {
     if (lhs->getType()->getPointerElementType()->isArrayTy()) {
         return LogError("Cannot assign value to an array.\n");
     }
-    if (lhs->getType()->getPointerElementType()->isPointerTy()) {
-        return LogError("Cannot assign value to a pointer.\n");
+    if (lhs->getType()->getPointerElementType()->isPointerTy() &&
+        lhs->getType()->getPointerElementType() != rhs->getType()) {
+        return LogError("Cannot assign a pointer value to a different type pointer.\n");
     }
     if (lhs->getType()->getPointerElementType()->isStructTy()) {
         return LogError("Cannot assign value to a struct.\n");
@@ -976,8 +977,9 @@ Value *AST::DirectAssign::GenPointer(CODEGEN_PARAMS) {
     if (lhs->getType()->getPointerElementType()->isArrayTy()) {
         return LogError("Cannot assign value to an array.\n");
     }
-    if (lhs->getType()->getPointerElementType()->isPointerTy()) {
-        return LogError("Cannot assign value to a pointer.\n");
+    if (lhs->getType()->getPointerElementType()->isPointerTy() &&
+        lhs->getType()->getPointerElementType() != rhs->getType()) {
+        return LogError("Cannot assign a pointer value to a different type pointer.\n");
     }
     if (lhs->getType()->getPointerElementType()->isStructTy()) {
         return LogError("Cannot assign value to a struct.\n");
@@ -1061,6 +1063,7 @@ Value *AST::FuncDef::GenCode(CODEGEN_PARAMS) {
                 nullptr, (*parm)->_Name);
             mBuilder.CreateStore(&arg, alloca);
             context->AddDefinition((*parm)->_Name, alloca, CodeGenContext::SymbolType::tVariable);
+            ++ parm;
         }
         context->curFunction = function;
         context->PushScope();

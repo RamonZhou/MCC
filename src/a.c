@@ -6,6 +6,10 @@ typedef struct {
     int a, b;
 } point;
 
+int f(int a, int b, int c) {
+    return a + b + c;
+}
+
 int gl = 2;
 
 int main() {
@@ -15,6 +19,9 @@ int main() {
     printf("%d %d\n", k.b * k.a + (k.a = 2), k.a);
     const int p = 1;
     p = 2;
+    char array(5) s;
+    s = "xxxx";
+    printf("%c\n", s[1]);
     // int array(12) array(3) arr;
     // int a = 5 + 5;
     // int b = a + 2;
