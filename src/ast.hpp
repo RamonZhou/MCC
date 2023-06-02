@@ -208,8 +208,8 @@ namespace AST {
             _String
 		};
 
-        VarType() : _isConst(false) {};
-        VarType(bool _isConst) : _isConst(_isConst) {};
+        VarType() : _isConst(false), _LLVMType(nullptr) {};
+        VarType(bool _isConst) : _isConst(_isConst), _LLVMType(nullptr) {};
 
         void SetConst(void) {
 			this->_isConst = true;
