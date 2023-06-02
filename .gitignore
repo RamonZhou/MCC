@@ -11,5 +11,7 @@ CTestTestfile.cmake
 _deps
 *.dot
 *.png
-.vscode
 src/mcc
+src/a
+*.ll
+*.s

@@ -8,6 +8,7 @@ CodeGenContext::CodeGenContext() {
     mModule = make_unique<Module>("main", mContext);
     curFunction = NULL;
     mGlobalSymbolTable = make_unique<SymbolTable>();
+    mStructTable = make_unique<StructTable>();
 }
 
 void CodeGenContext::PushScope() {
@@ -73,6 +74,15 @@ bool CodeGenContext::isDefinedGlobally(string name) {
     return mGlobalSymbolTable->find(name) != mGlobalSymbolTable->end();
 }
 
+void CodeGenContext::AddStructType(Type *type, AST::StructType *node) {
+    mStructTable->insert(make_pair(type, node));
+}
+
+AST::StructType *CodeGenContext::LookUpStructType(Type *type) {
+    if (mStructTable->find(type) == mStructTable->end()) return nullptr;
+    return mStructTable->at(type);
+}
+
 void CodeGenContext::PushLoopBlocks(BasicBlock *beginBlock, BasicBlock *endBlock) {
     mLoopBeginBlocks.push_back(beginBlock);
     mLoopEndBlocks.push_back(endBlock);
@@ -112,6 +122,8 @@ bool CodeGenContext::GenerateIRCode(AST::Program *Root) {
     // Constant *printfFunc = mModule->getOrInsertFunction("printf", printfType);
     auto printf_func = Function::Create(printfType, GlobalValue::ExternalLinkage, "printf", mModule.get());
     AddGlobalDefinition("printf", SymbolType::tFunction);
+    auto scanf_func = Function::Create(printfType, GlobalValue::ExternalLinkage, "scanf", mModule.get());
+    AddGlobalDefinition("scanf", SymbolType::tFunction);
     
     Value *ret = Root->GenCode(this);
 

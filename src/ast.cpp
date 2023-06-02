@@ -16,6 +16,46 @@ Value *LogError(string str) {
     return nullptr;
 }
 
+Type *CalcArithMergedType(Type *lhs, Type *rhs) {
+    static Type *doubleTy = mBuilder.getDoubleTy();
+    static Type *floatTy = mBuilder.getFloatTy();
+    static Type *intTy = mBuilder.getInt32Ty();
+    static Type *charTy = mBuilder.getInt8Ty();
+    static Type *boolTy = mBuilder.getInt1Ty();
+    if (lhs->isPointerTy() || rhs->isPointerTy()) return nullptr;
+    if (lhs->isArrayTy() || rhs->isArrayTy()) return nullptr;
+    if (lhs->isStructTy() || rhs->isStructTy()) return nullptr;
+    if (lhs == doubleTy || rhs == doubleTy) return doubleTy;
+    if (lhs == floatTy || rhs == floatTy) return floatTy;
+    if (lhs == intTy || rhs == intTy) return intTy;
+    if (lhs == charTy || rhs == charTy) return charTy;
+    if (lhs == boolTy || rhs == boolTy) return boolTy;
+    return nullptr;
+}
+
+Value *TypeCastTo(Value *val, Type *target) {
+    Type *type = val->getType();
+    if (type == target) return val;
+    if (type->isArrayTy() || target->isArrayTy()) return nullptr;
+    if (type->isStructTy() || target->isStructTy()) return nullptr;
+    if (type->isPointerTy() || target->isPointerTy()) return nullptr;
+    if (type->isFloatingPointTy() && target->isFloatingPointTy()) {
+        return mBuilder.CreateFPCast(val, target);
+    }
+    if (type->isFloatingPointTy() && target->isIntegerTy()) {
+        return target == mBuilder.getInt1Ty() ? mBuilder.CreateFPToUI(val, target) :
+            mBuilder.CreateFPToSI(val, target);
+    }
+    if (type->isIntegerTy() && target->isFloatingPointTy()) {
+        return type == mBuilder.getInt1Ty() ? mBuilder.CreateUIToFP(val, target) :
+            mBuilder.CreateSIToFP(val, target);
+    }
+    if (type->isIntegerTy() && target->isIntegerTy()) {
+        return mBuilder.CreateIntCast(val, target, type->getIntegerBitWidth() != 1);
+    }
+    return nullptr;
+}
+
 Value *AST::Program::GenCode(CODEGEN_PARAMS) {
 #ifdef DEBUG
     cerr << "Program::GenCode()" << endl;
@@ -246,15 +286,14 @@ Value *AST::ReturnStm::GenCode(CODEGEN_PARAMS) {
         if (!function->getReturnType()->isVoidTy()) {
             return LogError("Return-statement must have a value, in function returning '" + GetTypeString(function->getReturnType()) + "'.\n");
         }
-        mBuilder.CreateRetVoid();
+        return mBuilder.CreateRetVoid();
     } else {
-        // TODO: typecast
         Value *returnValue = _ReturnValue->GenCode(context);
-        if (returnValue->getType() != function->getReturnType()) {
+        if ((returnValue = TypeCastTo(returnValue, function->getReturnType())) == nullptr) {
             return LogError("Invalid conversion from'" + GetTypeString(returnValue->getType()) + "' to '" +
                 GetTypeString(function->getReturnType()) + "'.\n");
         }
-        mBuilder.CreateRet(returnValue);
+        return mBuilder.CreateRet(returnValue);
     }
 }
 
@@ -315,8 +354,6 @@ Value *AST::Variable::GenPointer(CODEGEN_PARAMS) {
         return LogError(_Name + " is not a variable or constant\n");
     }
     Value *val = context->LookUpVariable(_Name);
-    
-    // TODO: Pointer, Array
     return val;
 }
 
@@ -339,6 +376,7 @@ Value *AST::Constant::GenCode(CODEGEN_PARAMS) {
         case AST::VarType::_String:
             return mBuilder.CreateGlobalStringPtr(this->_String.c_str());
     }
+    return LogError("Internal error: Undefined constant type.\n");
 }
 
 Value *AST::ArraySubscript::GenCode(CODEGEN_PARAMS) {
@@ -373,10 +411,6 @@ Value *AST::ArraySubscript::GenPointer(CODEGEN_PARAMS) {
     return mBuilder.CreateGEP(arr->getType()->getPointerElementType(), arr, idx);
 }
 
-Value *AST::SizeOf::GenCode(CODEGEN_PARAMS) {
-    // TODO
-}
-
 Value *AST::FuncCall::GenCode(CODEGEN_PARAMS) {
 #ifdef DEBUG
     cerr << "FuncCall::GenCode()" << endl;
@@ -399,8 +433,8 @@ Value *AST::FuncCall::GenCode(CODEGEN_PARAMS) {
     vector<Value *> params;
     for (int i = 0; i < (int)_ParmList->size(); ++ i) {
         Value *val = _ParmList->at(i)->GenCode(context);
-        if (i < numParams && val->getType() != function->getArg(i)->getType()) {
-            return LogError("The param types don't match when calling " + _FuncName + " .\n");
+        if (i < numParams && (val = TypeCastTo(val, function->getArg(i)->getType())) == nullptr) {
+            return LogError("Invalid type-casting when calling " + _FuncName + " .\n");
         }
         params.push_back(val);
     }
@@ -409,116 +443,141 @@ Value *AST::FuncCall::GenCode(CODEGEN_PARAMS) {
 }
 
 Value *AST::StructReference::GenCode(CODEGEN_PARAMS) {
-    // TODO
+    Value *ptr = this->GenPointer(context);
+    return mBuilder.CreateLoad(ptr->getType()->getPointerElementType(), ptr);
 }
 
 Value *AST::StructReference::GenPointer(CODEGEN_PARAMS) {
-    // TODO
+    Value *val = _Struct->GenPointer(context);
+    if (val == nullptr) return nullptr;
+    if (!val->getType()->getPointerElementType()->isStructTy()) {
+        return LogError("Cannot request member '" + _Member + "' from a non-struct type.\n");
+    }
+    AST::StructType *node = context->LookUpStructType(val->getType()->getPointerElementType());
+    if (node == nullptr) {
+        return LogError("Internal error: Undefined struct type.\n");
+    }
+    Type *memType = nullptr;
+    int idx = 0, flag = 0;
+    for (AST::StructMember *member: *(node->_Member)) {
+        for (string name: *(member->_MemberList)) {
+            if (name == _Member) {
+                memType = member->_Type->GetLLVMType(context);
+                flag = 1;
+                break;
+            }
+            ++ idx;
+        }
+        if (flag) break;
+    }
+    if (flag == 0) {
+        return LogError("The struct has no member named '" + _Member + "'.\n");
+    }
+    return mBuilder.CreateGEP(val->getType()->getPointerElementType(), val,
+        {mBuilder.getInt32(0), mBuilder.getInt32(idx)});
 }
 
 Value *AST::StructDereference::GenCode(CODEGEN_PARAMS) {
-    // TODO
+    Value *ptr = this->GenPointer(context);
+    return mBuilder.CreateLoad(ptr->getType()->getPointerElementType(), ptr);
 }
 
 Value *AST::StructDereference::GenPointer(CODEGEN_PARAMS) {
-    // TODO
+    Value *val = _Struct->GenCode(context);
+    if (val == nullptr) return nullptr;
+    if (!val->getType()->getPointerElementType()->isStructTy()) {
+        return LogError("Cannot request member '" + _Member + "' from a non-struct type.\n");
+    }
+    AST::StructType *node = context->LookUpStructType(val->getType()->getPointerElementType());
+    if (node == nullptr) {
+        return LogError("Internal error: Undefined struct type.\n");
+    }
+    Type *memType = nullptr;
+    int idx = 0, flag = 0;
+    for (AST::StructMember *member: *(node->_Member)) {
+        for (string name: *(member->_MemberList)) {
+            if (name == _Member) {
+                memType = member->_Type->GetLLVMType(context);
+                flag = 1;
+                break;
+            }
+            ++ idx;
+        }
+        if (flag) break;
+    }
+    if (flag == 0) {
+        return LogError("The struct has no member named '" + _Member + "'.\n");
+    }
+    return mBuilder.CreateGEP(val->getType()->getPointerElementType(), val,
+        {mBuilder.getInt32(0), mBuilder.getInt32(idx)});
 }
 
 Value *AST::UnaryPlus::GenCode(CODEGEN_PARAMS) {
-    // TODO
+    Value *val = _Operand->GenCode(context);
+    if (!val) return nullptr;
+    if (val->getType()->isIntegerTy() || val->getType()->isFloatingPointTy()) {
+        return val;
+    }
+    return LogError("Invalid use of unary '+'.\n");
 }
 
 Value *AST::UnaryMinus::GenCode(CODEGEN_PARAMS) {
-    // TODO
+    Value *val = _Operand->GenCode(context);
+    if (!val) return nullptr;
+    if (val->getType()->isIntegerTy()) {
+        return mBuilder.CreateNeg(val);
+    }
+    if (val->getType()->isFloatingPointTy()) {
+        return mBuilder.CreateFNeg(val);
+    }
+    return LogError("Invalid use of unary '-'.\n");
 }
 
 Value *AST::TypeCast::GenCode(CODEGEN_PARAMS) {
-    // TODO
-}
-
-Type *CalcArithMergedType(Type *lhs, Type *rhs) {
-    static Type *doubleTy = mBuilder.getDoubleTy();
-    static Type *floatTy = mBuilder.getFloatTy();
-    static Type *intTy = mBuilder.getInt32Ty();
-    static Type *charTy = mBuilder.getInt8Ty();
-    static Type *boolTy = mBuilder.getInt1Ty();
-    if (lhs->isPointerTy() || rhs->isPointerTy()) return nullptr;
-    if (lhs == doubleTy || rhs == doubleTy) return doubleTy;
-    if (lhs == floatTy || rhs == floatTy) return floatTy;
-    if (lhs == intTy || rhs == intTy) return intTy;
-    if (lhs == charTy || rhs == charTy) return charTy;
-    if (lhs == boolTy || rhs == boolTy) return boolTy;
-    return nullptr;
-}
-
-Value *TypeCastTo(Value *val, Type *target) {
-    Type *type = val->getType();
-    if (type == target) return val;
-    if (type->isArrayTy() || target->isArrayTy()) return nullptr;
-    if (type->isPointerTy() || target->isPointerTy()) return nullptr;
-    if (type->isFloatingPointTy() && target->isFloatingPointTy()) {
-        return mBuilder.CreateFPCast(val, target);
+    Value *val = _Operand->GenCode(context);
+    Type *type = _VarType->GetLLVMType(context);
+    if (!val || !type) return nullptr;
+    val = TypeCastTo(val, type);
+    if (val == nullptr) {
+        return LogError("Invalid type-casting.\n");
     }
-    if (type->isFloatingPointTy() && target->isIntegerTy()) {
-        return target == mBuilder.getInt1Ty() ? mBuilder.CreateFPToUI(val, target) :
-            mBuilder.CreateFPToSI(val, target);
-    }
-    if (type->isIntegerTy() && target->isFloatingPointTy()) {
-        return type == mBuilder.getInt1Ty() ? mBuilder.CreateUIToFP(val, target) :
-            mBuilder.CreateSIToFP(val, target);
-    }
-    if (type->isIntegerTy() && target->isIntegerTy()) {
-        return mBuilder.CreateIntCast(val, target, type->getIntegerBitWidth() != 1);
-    }
-    return nullptr;
-}
-
-Value *AST::PrefixInc::GenCode(CODEGEN_PARAMS) {
-    // TODO
-}
-
-Value *AST::PrefixInc::GenPointer(CODEGEN_PARAMS) {
-    // TODO
-}
-
-Value *AST::PostfixInc::GenCode(CODEGEN_PARAMS) {
-    // TODO
-}
-
-Value *AST::PrefixDec::GenCode(CODEGEN_PARAMS) {
-    // TODO
-}
-
-Value *AST::PrefixDec::GenPointer(CODEGEN_PARAMS) {
-    // TODO
-}
-
-Value *AST::PostfixDec::GenCode(CODEGEN_PARAMS) {
-    // TODO
+    return val;
 }
 
 Value *AST::Indirection::GenCode(CODEGEN_PARAMS) {
-    // TODO
+    Value *ptr = _Operand->GenCode(context);
+    if (!ptr->getType()->isPointerTy()) {
+        return LogError("Operator * can only be used with pointers.\n");
+    }
+    return mBuilder.CreateLoad(ptr->getType()->getPointerElementType(), ptr);
 }
 
 Value *AST::Indirection::GenPointer(CODEGEN_PARAMS) {
-    // TODO
+    Value *ptr = _Operand->GenCode(context);
+    if (!ptr->getType()->isPointerTy()) {
+        return LogError("Operator * can only be used with pointers.\n");
+    }
+    return ptr;
 }
 
 Value *AST::AddressOf::GenCode(CODEGEN_PARAMS) {
-    // TODO
+    return _Operand->GenPointer(context);
 }
 
 Value *AST::AddressOf::GenPointer(CODEGEN_PARAMS) {
-    // TODO
+    return LogError("Expected r-value, but found l-value.\n");
 }
 
 Value *AST::LogicNot::GenCode(CODEGEN_PARAMS) {
-    // TODO
+    return mBuilder.CreateICmpEQ(TypeCastToBool(_Operand->GenCode(context)), mBuilder.getInt1(0));
 }
 
 Value *AST::BitwiseNot::GenCode(CODEGEN_PARAMS) {
-    // TODO
+    Value *val = _Operand->GenCode(context);
+    if (!val->getType()->isIntegerTy()) {
+        return LogError("Bitwise NOT operator only takes two integers.");
+    }
+    return mBuilder.CreateNot(val);
 }
 
 Value *AST::Division::GenCode(CODEGEN_PARAMS) {
@@ -890,10 +949,6 @@ Value *AST::LogicOR::GenCode(CODEGEN_PARAMS) {
     return mBuilder.CreateOr(lhs, rhs);
 }
 
-Value *AST::TernaryCondition::GenCode(CODEGEN_PARAMS) {
-    // TODO
-}
-
 Value *AST::DirectAssign::GenCode(CODEGEN_PARAMS) {
     Value *lhs = _LHS->GenPointer(context);
     Value *rhs = _RHS->GenCode(context);
@@ -903,6 +958,9 @@ Value *AST::DirectAssign::GenCode(CODEGEN_PARAMS) {
     }
     if (lhs->getType()->getPointerElementType()->isPointerTy()) {
         return LogError("Cannot assign value to a pointer.\n");
+    }
+    if (lhs->getType()->getPointerElementType()->isStructTy()) {
+        return LogError("Cannot assign value to a struct.\n");
     }
     if (!(rhs = TypeCastTo(rhs, lhs->getType()->getPointerElementType()))) {
         return LogError("Invalid type conversion when assigning value.\n");
@@ -915,57 +973,20 @@ Value *AST::DirectAssign::GenPointer(CODEGEN_PARAMS) {
     Value *lhs = _LHS->GenPointer(context);
     Value *rhs = _RHS->GenCode(context);
     if (!lhs || !rhs) return nullptr;
-    if (lhs->getType()->isArrayTy()) {
+    if (lhs->getType()->getPointerElementType()->isArrayTy()) {
         return LogError("Cannot assign value to an array.\n");
     }
-    if (lhs->getType()->isPointerTy()) {
+    if (lhs->getType()->getPointerElementType()->isPointerTy()) {
         return LogError("Cannot assign value to a pointer.\n");
+    }
+    if (lhs->getType()->getPointerElementType()->isStructTy()) {
+        return LogError("Cannot assign value to a struct.\n");
     }
     if (!(rhs = TypeCastTo(rhs, lhs->getType()->getPointerElementType()))) {
         return LogError("Invalid type conversion when assigning value.\n");
     }
     mBuilder.CreateStore(rhs, lhs);
     return lhs;
-}
-
-Value *AST::DivAssign::GenCode(CODEGEN_PARAMS) {
-    // TODO
-}
-
-Value *AST::MulAssign::GenCode(CODEGEN_PARAMS) {
-    // TODO
-}
-
-Value *AST::ModAssign::GenCode(CODEGEN_PARAMS) {
-    // TODO
-}
-
-Value *AST::AddAssign::GenCode(CODEGEN_PARAMS) {
-    // TODO
-}
-
-Value *AST::SubAssign::GenCode(CODEGEN_PARAMS) {
-    // TODO
-}
-
-Value *AST::SHLAssign::GenCode(CODEGEN_PARAMS) {
-    // TODO
-}
-
-Value *AST::SHRAssign::GenCode(CODEGEN_PARAMS) {
-    // TODO
-}
-
-Value *AST::BitwiseANDAssign::GenCode(CODEGEN_PARAMS) {
-    // TODO
-}
-
-Value *AST::BitwiseXORAssign::GenCode(CODEGEN_PARAMS) {
-    // TODO
-}
-
-Value *AST::BitwiseORAssign::GenCode(CODEGEN_PARAMS) {
-    // TODO
 }
 
 bool CompareFunctionType(FunctionType *x, FunctionType *y) {
@@ -1138,15 +1159,36 @@ Value *AST::VarInit::GenCode(CODEGEN_PARAMS) {
 }
 
 Value *AST::TypeDef::GenCode(CODEGEN_PARAMS) {
-    // TODO
+    Type *type = _VarType->GetLLVMType(context);
+    if (type == nullptr) return nullptr;
+    if (context->LookUpVariableSymbolType(_Alias) != CodeGenContext::SymbolType::tUndefined) {
+        return LogError("Type alias '" + _Alias + "' has already been declared.\n");
+    }
+    context->AddDefinition(_Alias, reinterpret_cast<Value *>(type), CodeGenContext::SymbolType::tType);
+    return reinterpret_cast<Value *>(type);
 }
 
 Value *AST::DefinedType::GenCode(CODEGEN_PARAMS) {
-    // TODO
+    return nullptr;
+}
+
+Type *AST::DefinedType::GetLLVMType(CODEGEN_PARAMS) {
+    if (context->LookUpVariableSymbolType(_Name) != CodeGenContext::SymbolType::tType) {
+        LogError("'" + _Name + "' is not a defined type.\n");
+        return nullptr;
+    }
+    Type *type = reinterpret_cast<Type *>(context->LookUpVariable(_Name));
+    return type;
 }
 
 Value *AST::PointerType::GenCode(CODEGEN_PARAMS) {
-    // TODO
+    return nullptr;
+}
+
+Type *AST::PointerType::GetLLVMType(CODEGEN_PARAMS) {
+    if (_LLVMType) return _LLVMType;
+    Type *elemType = _BaseType->GetLLVMType(context);
+    return _LLVMType = llvm::PointerType::get(elemType, 0);
 }
 
 Value *AST::ArrayType::GenCode(CODEGEN_PARAMS) {
@@ -1164,37 +1206,54 @@ Type *AST::ArrayType::GetLLVMType(CODEGEN_PARAMS) {
 }
 
 Value *AST::StructType::GenCode(CODEGEN_PARAMS) {
-    // TODO
+    return nullptr;
+}
+
+Type *AST::StructType::GetLLVMType(CODEGEN_PARAMS) {
+    if (_LLVMType) return _LLVMType;
+    _LLVMType = llvm::StructType::create(mContext);
+    // context->AddStructType(_LLVMType, this);
+    vector<Type *> members;
+    for (StructMember *i: (*_Member)) {
+        Type *memType = i->_Type->GetLLVMType(context);
+        if (memType == nullptr) return nullptr;
+        for (int _ = 0; _ < (int)(i->_MemberList->size()); ++ _) {
+            members.push_back(memType);
+        }
+    }
+    ((llvm::StructType *)_LLVMType)->setBody(members);
+    context->AddStructType(_LLVMType, this);
+    return _LLVMType;
 }
 
 Value *AST::StructMember::GenCode(CODEGEN_PARAMS) {
-    // TODO
+    return nullptr;
 }
 
 Value *AST::IntType::GenCode(CODEGEN_PARAMS) {
-    // TODO
+    return nullptr;
 }
 
 Value *AST::CharType::GenCode(CODEGEN_PARAMS) {
-    // TODO
+    return nullptr;
 }
 
 Value *AST::FloatType::GenCode(CODEGEN_PARAMS) {
-    // TODO
+    return nullptr;
 }
 
 Value *AST::DoubleType::GenCode(CODEGEN_PARAMS) {
-    // TODO
+    return nullptr;
 }
 
 Value *AST::StringType::GenCode(CODEGEN_PARAMS) {
-    // TODO
+    return nullptr;
 }
 
 Value *AST::BoolType::GenCode(CODEGEN_PARAMS) {
-    // TODO
+    return nullptr;
 }
 
 Value *AST::VoidType::GenCode(CODEGEN_PARAMS) {
-    // TODO
+    return nullptr;
 }
