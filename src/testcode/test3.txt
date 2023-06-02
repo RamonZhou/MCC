@@ -1,0 +1,21 @@
+int fun1(int a,double b,string c);
+
+double func2(int,int,double);
+
+int func1(int a,double b, string c){
+    int res = a + b;
+    return res;
+}
+
+double func2(int a,int b,double c){
+    return c+a*b;
+}
+
+int main(){
+    int a = 0;
+    double b = 3.5;
+    string c = "c";
+
+    a = func1(a,b,c);
+    b = func2(a,a,b);
+}

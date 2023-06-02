@@ -1,0 +1,13 @@
+typedef struct {
+    int a,b;
+    double c,d;
+    string s;
+} str;
+
+int main() {
+    str str1;
+    int a = 21;
+    str1.a = a;
+    str1.s = "hello world";
+
+}

@@ -6,7 +6,7 @@
 #include <iostream>
 extern "C" int yywrap() {return 1;}
 
-char Escape2Char(char ch){
+char Convert(char ch){
 	switch(ch){
 	case 'a': return '\a';
 	case 'b': return '\b';
@@ -108,7 +108,7 @@ char Escape2Char(char ch){
 "/*"[^*]*[*]+([^*/][^*]*[*]+)*"/"						{ ; }
 "//".*													{ ; }
 "\'"\\."\'"												{ 
-															yylval.cVal = Escape2Char(yytext[2]);
+															yylval.cVal = Convert(yytext[2]);
 															return CHARACTER; 
 														}
 "\'"[^\\']"\'"											{ 
@@ -121,7 +121,7 @@ char Escape2Char(char ch){
 															for (int i = 1; i <= yyleng-2; i++)
 																if (yytext[i] == '\\'){
 																	i++;
-																	yylval.strVal->push_back(Escape2Char(yytext[i]));
+																	yylval.strVal->push_back(Convert(yytext[i]));
 																}else{
 																	yylval.strVal->push_back(yytext[i]);
 																}
