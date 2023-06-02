@@ -195,27 +195,6 @@ int ArraySubscript::GenGraphNode(GRAPHGEN_PARAMS) {
     return id;
 }
 
-int SizeOf::GenGraphNode(GRAPHGEN_PARAMS) {
-    int id = ++ counter;
-    ss << "N" << id << "[label = \"{ SizeOf | ";
-    ss << "_Identifier = \\\"" << _Identifier << "\\\"";
-    ss << " |{";
-    ss << "<c1>_Exp |";
-    ss << "<c2>_VarType";
-    ss << "} }\"]\n";
-    
-    if (_Exp) {
-        int ch = _Exp->GenGraphNode(counter, ss);
-        ss << "N" << id << ":c1->N" << ch << "\n";
-    }
-    if (_VarType) {
-        int ch = _VarType->GenGraphNode(counter, ss);
-        ss << "N" << id << ":c2->N" << ch << "\n";
-    }
-
-    return id;
-}
-
 int FuncCall::GenGraphNode(GRAPHGEN_PARAMS) {
     int id = ++ counter;
     ss << "N" << id << "[label = \"{ FuncCall | ";
@@ -309,62 +288,6 @@ int TypeCast::GenGraphNode(GRAPHGEN_PARAMS) {
     if (_Operand) {
         int ch = _Operand->GenGraphNode(counter, ss);
         ss << "N" << id << ":c2->N" << ch << "\n";
-    }
-
-    return id;
-}
-
-int PrefixInc::GenGraphNode(GRAPHGEN_PARAMS) {
-    int id = ++ counter;
-    ss << "N" << id << "[label = \"{ PrefixInc | |{";
-    ss << "<c1>_Operand";
-    ss << "} }\"]\n";
-    
-    if (_Operand) {
-        int ch = _Operand->GenGraphNode(counter, ss);
-        ss << "N" << id << ":c1->N" << ch << "\n";
-    }
-
-    return id;
-}
-
-int PostfixInc::GenGraphNode(GRAPHGEN_PARAMS) {
-    int id = ++ counter;
-    ss << "N" << id << "[label = \"{ PostfixInc | |{";
-    ss << "<c1>_Operand";
-    ss << "} }\"]\n";
-    
-    if (_Operand) {
-        int ch = _Operand->GenGraphNode(counter, ss);
-        ss << "N" << id << ":c1->N" << ch << "\n";
-    }
-
-    return id;
-}
-
-int PrefixDec::GenGraphNode(GRAPHGEN_PARAMS) {
-    int id = ++ counter;
-    ss << "N" << id << "[label = \"{ PrefixDec | |{";
-    ss << "<c1>_Operand";
-    ss << "} }\"]\n";
-    
-    if (_Operand) {
-        int ch = _Operand->GenGraphNode(counter, ss);
-        ss << "N" << id << ":c1->N" << ch << "\n";
-    }
-
-    return id;
-}
-
-int PostfixDec::GenGraphNode(GRAPHGEN_PARAMS) {
-    int id = ++ counter;
-    ss << "N" << id << "[label = \"{ PostfixDec | |{";
-    ss << "<c1>_Operand";
-    ss << "} }\"]\n";
-    
-    if (_Operand) {
-        int ch = _Operand->GenGraphNode(counter, ss);
-        ss << "N" << id << ":c1->N" << ch << "\n";
     }
 
     return id;
@@ -518,72 +441,8 @@ int LogicOR::GenGraphNode(GRAPHGEN_PARAMS) {
     return twoOperands(counter, ss, "LogicOR", _LHS, _RHS);
 }
 
-int TernaryCondition::GenGraphNode(GRAPHGEN_PARAMS) {
-    int id = ++ counter;
-    ss << "N" << id << "[label = \"{ TernaryCondition | |{";
-    ss << "<c1>_Condition | ";
-    ss << "<c2>_Then | ";
-    ss << "<c3>_Else";
-    ss << "} }\"]\n";
-    
-    if (_Condition) {
-        int ch = _Condition->GenGraphNode(counter, ss);
-        ss << "N" << id << ":c1->N" << ch << "\n";
-    }
-    if (_Then) {
-        int ch = _Then->GenGraphNode(counter, ss);
-        ss << "N" << id << ":c2->N" << ch << "\n";
-    }
-    if (_Else) {
-        int ch = _Else->GenGraphNode(counter, ss);
-        ss << "N" << id << ":c3->N" << ch << "\n";
-    }
-
-    return id;
-}
-
 int DirectAssign::GenGraphNode(GRAPHGEN_PARAMS) {
     return twoOperands(counter, ss, "DirectAssign", _LHS, _RHS);
-}
-
-int DivAssign::GenGraphNode(GRAPHGEN_PARAMS) {
-    return twoOperands(counter, ss, "DivAssign", _LHS, _RHS);
-}
-
-int MulAssign::GenGraphNode(GRAPHGEN_PARAMS) {
-    return twoOperands(counter, ss, "MulAssign", _LHS, _RHS);
-}
-
-int ModAssign::GenGraphNode(GRAPHGEN_PARAMS) {
-    return twoOperands(counter, ss, "ModAssign", _LHS, _RHS);
-}
-
-int AddAssign::GenGraphNode(GRAPHGEN_PARAMS) {
-    return twoOperands(counter, ss, "AddAssign", _LHS, _RHS);
-}
-
-int SubAssign::GenGraphNode(GRAPHGEN_PARAMS) {
-    return twoOperands(counter, ss, "SubAssign", _LHS, _RHS);
-}
-
-int SHLAssign::GenGraphNode(GRAPHGEN_PARAMS) {
-    return twoOperands(counter, ss, "SHLAssign", _LHS, _RHS);
-}
-
-int SHRAssign::GenGraphNode(GRAPHGEN_PARAMS) {
-    return twoOperands(counter, ss, "SHRAssign", _LHS, _RHS);
-}
-
-int BitwiseANDAssign::GenGraphNode(GRAPHGEN_PARAMS) {
-    return twoOperands(counter, ss, "BitwiseANDAssign", _LHS, _RHS);
-}
-
-int BitwiseXORAssign::GenGraphNode(GRAPHGEN_PARAMS) {
-    return twoOperands(counter, ss, "BitwiseXORAssign", _LHS, _RHS);
-}
-
-int BitwiseORAssign::GenGraphNode(GRAPHGEN_PARAMS) {
-    return twoOperands(counter, ss, "BitwiseORAssign", _LHS, _RHS);
 }
 
 int FuncDef::GenGraphNode(GRAPHGEN_PARAMS) {

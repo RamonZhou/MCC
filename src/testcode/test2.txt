@@ -1,13 +1,15 @@
 typedef struct {
-    int a,b;
-    double c,d;
+    int x,y;
+    double z;
     string s;
-} str;
+} point;
 
 int main() {
-    str str1;
+    point p1;
     int a = 21;
-    str1.a = a;
-    str1.s = "hello world";
-
+    p1.x = a;
+    p1.y = 10;
+    p1.z = 6.5;
+    p1.s = "this is a pointer";
+    printf("%d,%d,%f,%s\n",p1.x,p1.y,p1.z,p1.s);
 }

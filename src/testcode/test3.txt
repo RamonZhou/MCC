@@ -1,7 +1,3 @@
-int fun1(int a,double b,string c);
-
-double func2(int,int,double);
-
 int func1(int a,double b, string c){
     int res = a + b;
     return res;
@@ -18,4 +14,6 @@ int main(){
 
     a = func1(a,b,c);
     b = func2(a,a,b);
+
+    printf("%d,%f",a,b);
 }

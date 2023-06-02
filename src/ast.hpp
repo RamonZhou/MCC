@@ -2,7 +2,7 @@
  * @Author: Theta 1467116498@qq.com
  * @Date: 2023-05-14 13:04:27
  * @LastEditors: Theta 1467116498@qq.com
- * @LastEditTime: 2023-05-22 12:45:30
+ * @LastEditTime: 2023-06-02 12:42:13
  * @FilePath: /MCC/src/ast.h
  * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
  */
@@ -52,7 +52,6 @@ namespace AST{
         class Constant;
         class Subscription;
         class ArraySubscript;
-        class Sizeof;
         class FuncCall;
 
 
@@ -276,20 +275,6 @@ namespace AST {
         int GenGraphNode(GRAPHGEN_PARAMS);
     };
 
-    class SizeOf : public Exp {
-    public:
-        Exp* _Exp;
-        VarType* _VarType;
-        std::string _Identifier;
-
-        SizeOf(Exp* __Exp) : _Exp(__Exp), _VarType(NULL), _Identifier("") {}
-        SizeOf(VarType* __VarType) : _Exp(NULL), _VarType(__VarType), _Identifier("") {}
-        SizeOf(std::string __Identifier) : _Exp(NULL), _VarType(NULL), _Identifier(__Identifier) {}
-        Value *GenCode(CODEGEN_PARAMS) {return nullptr;}
-        Value *GenPointer(CODEGEN_PARAMS) { return LogError("The function return value is a r-value.\n"); }
-        int GenGraphNode(GRAPHGEN_PARAMS);
-    };
-
     class FuncCall : public Exp {
     public:
         std::string _FuncName;
@@ -354,45 +339,6 @@ namespace AST {
         int GenGraphNode(GRAPHGEN_PARAMS);
     };
 
-	class PrefixInc : public Exp {
-	public:
-		Exp* _Operand;
-		PrefixInc(Exp* __Operand) : _Operand(__Operand) {}
-		~PrefixInc(void) {}
-	    Value *GenCode(CODEGEN_PARAMS) {return nullptr;}
-        Value *GenPointer(CODEGEN_PARAMS) {return nullptr;}
-        int GenGraphNode(GRAPHGEN_PARAMS);
-    };
-
-	class PostfixInc : public Exp {
-	public:
-		Exp* _Operand;
-		PostfixInc(Exp* __Operand) : _Operand(__Operand) {}
-		~PostfixInc(void) {}
-	    Value *GenCode(CODEGEN_PARAMS) {return nullptr;}
-        Value *GenPointer(CODEGEN_PARAMS) { return LogError("Expected r-value, but found l-value.\n"); }
-        int GenGraphNode(GRAPHGEN_PARAMS);
-    };
-
-	class PrefixDec : public Exp {
-	public:
-		Exp* _Operand;
-		PrefixDec(Exp* __Operand) : _Operand(__Operand) {}
-		~PrefixDec(void) {}
-	    Value *GenCode(CODEGEN_PARAMS) {return nullptr;}
-        Value *GenPointer(CODEGEN_PARAMS) {return nullptr;}
-        int GenGraphNode(GRAPHGEN_PARAMS);
-    };
-
-	class PostfixDec : public Exp {
-	public:
-		Exp* _Operand;
-		PostfixDec(Exp* __Operand) : _Operand(__Operand) {}
-		~PostfixDec(void) {}
-	    Value *GenCode(CODEGEN_PARAMS) {return nullptr;}
-        Value *GenPointer(CODEGEN_PARAMS) { return LogError("Expected r-value, but found l-value.\n"); }
-        int GenGraphNode(GRAPHGEN_PARAMS);
-    };
 
 	class Indirection : public Exp {
 	public:
@@ -644,115 +590,6 @@ namespace AST {
 		~DirectAssign(void) {}
 	    Value *GenCode(CODEGEN_PARAMS);
         Value *GenPointer(CODEGEN_PARAMS);
-        int GenGraphNode(GRAPHGEN_PARAMS);
-    };
-
-	class DivAssign : public Exp {
-	public:
-		Exp* _LHS;
-		Exp* _RHS;
-		DivAssign(Exp* __LHS, Exp* __RHS) : _LHS(__LHS), _RHS(__RHS) {}
-		~DivAssign(void) {}
-	    Value *GenCode(CODEGEN_PARAMS) {return nullptr;}
-        Value *GenPointer(CODEGEN_PARAMS) { return LogError("Expected r-value, but found l-value.\n"); }
-        int GenGraphNode(GRAPHGEN_PARAMS);
-    };
-
-	class MulAssign : public Exp {
-	public:
-		Exp* _LHS;
-		Exp* _RHS;
-		MulAssign(Exp* __LHS, Exp* __RHS) : _LHS(__LHS), _RHS(__RHS) {}
-		~MulAssign(void) {}
-	    Value *GenCode(CODEGEN_PARAMS) {return nullptr;}
-        Value *GenPointer(CODEGEN_PARAMS) { return LogError("Expected r-value, but found l-value.\n"); }
-        int GenGraphNode(GRAPHGEN_PARAMS);
-    };
-
-	class ModAssign : public Exp {
-	public:
-		Exp* _LHS;
-		Exp* _RHS;
-		ModAssign(Exp* __LHS, Exp* __RHS) : _LHS(__LHS), _RHS(__RHS) {}
-		~ModAssign(void) {}
-	    Value *GenCode(CODEGEN_PARAMS) {return nullptr;}
-        Value *GenPointer(CODEGEN_PARAMS) { return LogError("Expected r-value, but found l-value.\n"); }
-        int GenGraphNode(GRAPHGEN_PARAMS);
-    };
-
-	class AddAssign : public Exp {
-	public:
-		Exp* _LHS;
-		Exp* _RHS;
-		AddAssign(Exp* __LHS, Exp* __RHS) : _LHS(__LHS), _RHS(__RHS) {}
-		~AddAssign(void) {}
-	    Value *GenCode(CODEGEN_PARAMS) {return nullptr;}
-        Value *GenPointer(CODEGEN_PARAMS) { return LogError("Expected r-value, but found l-value.\n"); }
-        int GenGraphNode(GRAPHGEN_PARAMS);
-    };
-
-	class SubAssign : public Exp {
-	public:
-		Exp* _LHS;
-		Exp* _RHS;
-		SubAssign(Exp* __LHS, Exp* __RHS) : _LHS(__LHS), _RHS(__RHS) {}
-		~SubAssign(void) {}
-	    Value *GenCode(CODEGEN_PARAMS) {return nullptr;}
-        Value *GenPointer(CODEGEN_PARAMS) { return LogError("Expected r-value, but found l-value.\n"); }
-        int GenGraphNode(GRAPHGEN_PARAMS);
-    };
-
-	class SHLAssign : public Exp {
-	public:
-		Exp* _LHS;
-		Exp* _RHS;
-		SHLAssign(Exp* __LHS, Exp* __RHS) : _LHS(__LHS), _RHS(__RHS) {}
-		~SHLAssign(void) {}
-	    Value *GenCode(CODEGEN_PARAMS) {return nullptr;}
-        Value *GenPointer(CODEGEN_PARAMS) { return LogError("Expected r-value, but found l-value.\n"); }
-        int GenGraphNode(GRAPHGEN_PARAMS);
-    };
-	class SHRAssign : public Exp {
-	public:
-		Exp* _LHS;
-		Exp* _RHS;
-		SHRAssign(Exp* __LHS, Exp* __RHS) : _LHS(__LHS), _RHS(__RHS) {}
-		~SHRAssign(void) {}
-	    Value *GenCode(CODEGEN_PARAMS) {return nullptr;}
-        Value *GenPointer(CODEGEN_PARAMS) { return LogError("Expected r-value, but found l-value.\n"); }
-        int GenGraphNode(GRAPHGEN_PARAMS);
-    };
-
-	class BitwiseANDAssign : public Exp {
-	public:
-		Exp* _LHS;
-		Exp* _RHS;
-		BitwiseANDAssign(Exp* __LHS, Exp* __RHS) : _LHS(__LHS), _RHS(__RHS) {}
-		~BitwiseANDAssign(void) {}
-	    Value *GenCode(CODEGEN_PARAMS) {return nullptr;}
-        Value *GenPointer(CODEGEN_PARAMS) { return LogError("Expected r-value, but found l-value.\n"); }
-        int GenGraphNode(GRAPHGEN_PARAMS);
-    };
-
-	class BitwiseXORAssign : public Exp {
-	public:
-		Exp* _LHS;
-		Exp* _RHS;
-		BitwiseXORAssign(Exp* __LHS, Exp* __RHS) : _LHS(__LHS), _RHS(__RHS) {}
-		~BitwiseXORAssign(void) {}
-	    Value *GenCode(CODEGEN_PARAMS) {return nullptr;}
-        Value *GenPointer(CODEGEN_PARAMS) { return LogError("Expected r-value, but found l-value.\n"); }
-        int GenGraphNode(GRAPHGEN_PARAMS);
-    };
-
-	class BitwiseORAssign : public Exp {
-	public:
-		Exp* _LHS;
-		Exp* _RHS;
-		BitwiseORAssign(Exp* __LHS, Exp* __RHS) : _LHS(__LHS), _RHS(__RHS) {}
-		~BitwiseORAssign(void) {}
-	    Value *GenCode(CODEGEN_PARAMS) {return nullptr;}
-        Value *GenPointer(CODEGEN_PARAMS) { return LogError("Expected r-value, but found l-value.\n"); }
         int GenGraphNode(GRAPHGEN_PARAMS);
     };
 

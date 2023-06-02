@@ -42,47 +42,30 @@ char Convert(char ch){
 "]"														{return RBRACKET;}
 "{"														{return LBRACE;}
 "}"														{return RBRACE;}
-"<<="													{return SHLEQ;}
 "<<"													{return SHL;}
-">>="													{return SHREQ;}
 ">>"													{return SHR;}
 "=="													{return EQ;}
 ">="													{return GE;}
 ">"														{return GT;}
 "<="													{return LE;}
 "<"														{return LT;}
-"!="													{return NEQ;}
 "!"														{return NOT;}
 "="														{return ASSIGN;}
 "&&"													{return AND;}
-"&="													{return BANDEQ;}
 "&"														{return BAND;}
 "||"													{return OR;}
-"|="													{return BOREQ;}
 "|"														{return BOR;}
 "->"													{return ARW;}
-"^="													{return BXOREQ;}
 "^"														{return BXOR;}
 "~"														{return BNOT;}
-"++"													{return DADD;}
-"+="													{return ADDEQ;}
 "+"														{return ADD;}
-"--"													{return DSUB;}
-"-="													{return SUBEQ;}
 "-"														{return SUB;}
-"*="													{return MULEQ;}
 "*"														{return MUL;}
-"/="													{return DIVEQ;}
 "/"														{return DIV;}
-"%="													{return MODEQ;}
 "%"														{return MOD;}
-"?"														{return QUES;}
-":"														{return COLON;}
 "struct"												{return STRUCT;}
-"union"													{return UNION;}
 "typedef"												{return TYPEDEF;}
 "const"													{return CONST;}
-"enum"													{return ENUM;}
 "ptr"													{return PTR;}
 "array"													{return ARRAY;}
 "if"													{return IF;}
@@ -94,7 +77,6 @@ char Convert(char ch){
 "true"													{return TRUE; }
 "false"													{return FALSE; }
 "break"													{return BREAK; }
-"sizeof"												{return SIZEOF; }
 "bool"													{return BOOL; }
 "short"													{return SHORT; }
 "int"													{return INT; }

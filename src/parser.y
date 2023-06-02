@@ -71,17 +71,17 @@ AST::Program *Root;
 	
 }
 
-%token  COMMA ELLIPSES DOT SQUOTE DQUOTE SEMI QUES COLON
+%token  COMMA ELLIPSES DOT SQUOTE DQUOTE SEMI
 		LPAREN RPAREN LBRACKET RBRACKET LBRACE RBRACE
-		SHLEQ SHL SHREQ SHR
+		SHL SHR
 		EQ GE GT LE LT NEQ NOT ASSIGN
-		AND BANDEQ BAND OR BOREQ BOR
-		ARW BXOREQ BXOR BNOT
-		DADD ADDEQ ADD DSUB SUBEQ SUB
-		MULEQ MUL DIVEQ DIV MODEQ MOD
-		STRUCT UNION TYPEDEF CONST ENUM PTR ARRAY
+		AND BAND OR BOR
+		ARW BXOR BNOT
+		ADD SUB
+		MUL DIV MOD
+		STRUCT TYPEDEF CONST PTR ARRAY
 		IF ELSE FOR WHILE 
-		BREAK CONTINUE RETURN SIZEOF TRUE FALSE
+		BREAK CONTINUE RETURN TRUE FALSE
 		BOOL SHORT INT LONG CHAR FLOAT DOUBLE VOID STRING
 
 
@@ -124,22 +124,21 @@ AST::Program *Root;
 %nonassoc IF
 %nonassoc ELSE
 
-%left	COMMA //15
+%left	COMMA 
 %left	FUNC_CALL_ARG_LIST
-%right	ASSIGN ADDEQ SUBEQ MULEQ DIVEQ MODEQ SHLEQ SHREQ BANDEQ BOREQ BXOREQ //14
-%right	QUES COLON //13
-%left	OR//12
-%left	AND//11
-%left	BOR//10
-%left	BXOR//9
-%left	BAND//8
-%left	EQ NEQ//7
-%left	GE GT LE LT//6
-%left	SHL SHR//5
-%left	ADD SUB//4
-%left	MUL DIV MOD//3
-%right	DADD DSUB NOT BNOT SIZEOF//2
-%left	DOT ARW//1
+%right	ASSIGN
+%left	OR
+%left	AND
+%left	BOR
+%left	BXO
+%left	BAND
+%left	EQ NEQ
+%left	GE GT LE LT
+%left	SHL SHR
+%left	ADD SUB
+%left	MUL DIV MOD
+%right	NOT BNOT
+%left	DOT ARW
 
 %start Program
 %%
@@ -272,10 +271,7 @@ TypeDef:    TYPEDEF VarType IDENTIFIER SEMI                         {  $$ = new 
 Exp:        ArraySubscript  %prec ARW                               {  $$ = $1;  }
             | IDENTIFIER                                            {  $$ = new AST::Variable(*$1);  }
             | Constant                                              {  $$ = $1;  }
-            | SIZEOF LPAREN IDENTIFIER RPAREN						{  $$ = new AST::SizeOf(*$3);   }
-			| SIZEOF LPAREN Exp RPAREN								{  $$ = new AST::SizeOf($3);   }
-			| SIZEOF LPAREN VarType RPAREN							{  $$ = new AST::SizeOf($3);   }
-            | IDENTIFIER LPAREN Exps RPAREN						{  $$ = new AST::FuncCall(*$1,$3);   }
+            | IDENTIFIER LPAREN Exps RPAREN						    {  $$ = new AST::FuncCall(*$1,$3);   }
 
             | Exp DOT IDENTIFIER                                    {  $$ = new AST::StructReference($1,*$3);  }
             | Exp ARW IDENTIFIER                                    {  $$ = new AST::StructDereference($1,*$3);  }
@@ -283,10 +279,6 @@ Exp:        ArraySubscript  %prec ARW                               {  $$ = $1; 
             | ADD Exp	%prec NOT									{  $$ = new AST::UnaryPlus($2);   }
 			| SUB Exp	%prec NOT									{  $$ = new AST::UnaryMinus($2);   }
 			| LPAREN VarType RPAREN Exp %prec NOT					{  $$ = new AST::TypeCast($2,$4);   }
-			| DADD Exp	%prec NOT									{  $$ = new AST::PrefixInc($2);   }
-			| Exp DADD %prec ARW									{  $$ = new AST::PostfixInc($1);   }
-			| DSUB Exp %prec NOT									{  $$ = new AST::PrefixDec($2);   }
-			| Exp DSUB	%prec ARW									{  $$ = new AST::PostfixDec($1);   }
 			| MUL Exp	%prec NOT									{  $$ = new AST::Indirection($2);   }
 			| BAND Exp	%prec NOT									{  $$ = new AST::AddressOf($2);   }
 			| NOT Exp												{  $$ = new AST::LogicNot($2);   }
@@ -310,18 +302,7 @@ Exp:        ArraySubscript  %prec ARW                               {  $$ = $1; 
 			| Exp BOR Exp											{  $$ = new AST::BitwiseOR($1,$3);   } 
 			| Exp AND Exp											{  $$ = new AST::LogicAND($1,$3);   } 
 			| Exp OR Exp											{  $$ = new AST::LogicOR($1,$3);   } 
-			| Exp QUES Exp COLON Exp								{  $$ = new AST::TernaryCondition($1,$3,$5);   }
 			| Exp ASSIGN Exp 										{  $$ = new AST::DirectAssign($1,$3);   } 
-			| Exp DIVEQ Exp 										{  $$ = new AST::DivAssign($1,$3);   } 
-			| Exp MULEQ Exp										{  $$ = new AST::MulAssign($1,$3);   }  
-			| Exp MODEQ Exp										{  $$ = new AST::ModAssign($1,$3);   } 
-			| Exp ADDEQ Exp										{  $$ = new AST::AddAssign($1,$3);   } 
-			| Exp SUBEQ Exp										{  $$ = new AST::SubAssign($1,$3);   } 
-			| Exp SHLEQ Exp										{  $$ = new AST::SHLAssign($1,$3);   } 
-			| Exp SHREQ Exp										{  $$ = new AST::SHRAssign($1,$3);   } 
-			| Exp BANDEQ Exp										{  $$ = new AST::BitwiseANDAssign($1,$3);   } 
-			| Exp BXOREQ Exp										{  $$ = new AST::BitwiseXORAssign($1,$3);   } 
-			| Exp BOREQ Exp										{  $$ = new AST::BitwiseORAssign($1,$3);   }
             | LPAREN Exp RPAREN									{  $$ = $2;   }
 
 ArraySubscript:
