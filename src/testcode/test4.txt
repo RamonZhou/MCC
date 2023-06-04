@@ -16,6 +16,4 @@ int main() {
     printf("%d\n",arr2[0][1]);
     printf("%d\n",arr2[1][0]);
     printf("%d\n",arr2[1][1]);
-
-
 }
