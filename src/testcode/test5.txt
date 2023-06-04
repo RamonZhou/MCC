@@ -1,1 +1,22 @@
-s1
+int ptr pint; //指针变量
+int array(5) a;
+int array(5) ptr b; //数组指针
+char ptr array(10) c; //指针数组
+typedef struct{
+    char a;
+}def;
+typedef def ptr pdef; //结构指针
+void main(void)
+{
+    int x = 1;
+    pint = &x;
+    a[0] = 2;
+    a[1] = 3;
+    b = &a;
+    c[0] = "Hello";
+    printf("%d\n",*pint);
+    printf("%d\n",*b[0]);
+    printf("%d\n",a[0]);
+    printf("%s\n",c[0]);
+}
+

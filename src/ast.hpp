@@ -198,9 +198,7 @@ namespace AST {
 
         enum TypeID {
 			_Bool,
-			_Short,
 			_Int,
-			_Long,
 			_Char,
 			_Float,
 			_Double,

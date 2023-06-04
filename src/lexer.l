@@ -78,9 +78,7 @@ char Convert(char ch){
 "false"													{return FALSE; }
 "break"													{return BREAK; }
 "bool"													{return BOOL; }
-"short"													{return SHORT; }
 "int"													{return INT; }
-"long"													{return LONG; }
 "char"													{return CHAR; }
 "float"													{return FLOAT; }
 "double"												{return DOUBLE; }

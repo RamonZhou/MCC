@@ -119,7 +119,7 @@ AST::Program *Root;
 %type<exp>								Exp
 %type<exps>                             Exps _Exps
 %type<arraySubscript>                   ArraySubscript	
-%type<constant>							Constant
+%type<constant>							Constant NegConstant
 
 %nonassoc IF
 %nonassoc ELSE
@@ -270,6 +270,7 @@ TypeDef:    TYPEDEF VarType IDENTIFIER SEMI                         {  $$ = new 
 
 Exp:        ArraySubscript  %prec ARW                               {  $$ = $1;  }
             | IDENTIFIER                                            {  $$ = new AST::Variable(*$1);  }
+            | SUB NegConstant %prec Exp                                { $$ = $1; }
             | Constant                                              {  $$ = $1;  }
             | IDENTIFIER LPAREN Exps RPAREN						    {  $$ = new AST::FuncCall(*$1,$3);   }
 
@@ -286,7 +287,7 @@ Exp:        ArraySubscript  %prec ARW                               {  $$ = $1; 
 
             | Exp DIV Exp											{  $$ = new AST::Division($1,$3);   }
 			| Exp MUL Exp											{  $$ = new AST::Multiplication($1,$3);   } 
-			| Exp MOD Exp 										{  $$ = new AST::Modulo($1,$3);   }
+			| Exp MOD Exp 										    {  $$ = new AST::Modulo($1,$3);   }
 			| Exp ADD Exp											{  $$ = new AST::Addition($1,$3);   } 
 			| Exp SUB Exp											{  $$ = new AST::Subtraction($1,$3);   } 
             | Exp SHL Exp											{  $$ = new AST::LeftShift($1,$3);   } 
@@ -297,13 +298,13 @@ Exp:        ArraySubscript  %prec ARW                               {  $$ = $1; 
 			| Exp LE Exp											{  $$ = new AST::LogicLE($1,$3);   } 
 			| Exp EQ Exp											{  $$ = new AST::LogicEQ($1,$3);   } 
 			| Exp NEQ Exp											{  $$ = new AST::LogicNEQ($1,$3);   } 
-            | Exp BAND Exp										{  $$ = new AST::BitwiseAND($1,$3);   }
-			| Exp BXOR Exp										{  $$ = new AST::BitwiseXOR($1,$3);   }
+            | Exp BAND Exp										    {  $$ = new AST::BitwiseAND($1,$3);   }
+			| Exp BXOR Exp										    {  $$ = new AST::BitwiseXOR($1,$3);   }
 			| Exp BOR Exp											{  $$ = new AST::BitwiseOR($1,$3);   } 
 			| Exp AND Exp											{  $$ = new AST::LogicAND($1,$3);   } 
 			| Exp OR Exp											{  $$ = new AST::LogicOR($1,$3);   } 
 			| Exp ASSIGN Exp 										{  $$ = new AST::DirectAssign($1,$3);   } 
-            | LPAREN Exp RPAREN									{  $$ = $2;   }
+            | LPAREN Exp RPAREN									    {  $$ = $2;   }
 
 ArraySubscript:
             Exp LBRACKET Exp RBRACKET %prec ARW	                       {  $$ = new AST::ArraySubscript($1,$3);  }
@@ -316,6 +317,11 @@ Constant:	TRUE													{  $$ =  new AST::Constant(true);   }
 			| REAL													{  $$ =  new AST::Constant($1);   }
 			| STRINGCONST												{  $$ =  new AST::Constant(*$1);   }
 			;
+
+NegConstant:
+            | INTEGER 												{  $$ =  new AST::Constant(-$1);   }
+			| REAL													{  $$ =  new AST::Constant(-$1);   }
+            ;
 
 Exps:       _Exps COMMA Exp                                         {  $$ = $1; $$->push_back($3);  }
             | Exp  %prec FUNC_CALL_ARG_LIST                         {  $$ = new AST::Exps(); $$->push_back($1);  }

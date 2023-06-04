@@ -1,0 +1,32 @@
+int main(){
+    int array(2) array(3) mat1;
+    int array(3) array(2) mat2;
+    int array(2) array(2) result;
+    mat1[0][0] = 2;
+    mat1[0][1] = 1;
+    mat1[0][2] = 1;
+    mat1[1][0] = 3;
+    mat1[1][1] = 1;
+    mat1[1][2] = 2;
+
+    mat2[0][0] = 2;
+    mat2[0][1] = 2;
+    mat2[1][0] = 3;
+    mat2[1][1] = 1;
+    mat2[2][0] = 1;
+    mat2[2][1] = 2;
+
+
+    for(int i = 0;i < 2;i = i + 1){
+        for(int j = 0; j < 2; j = j + 1){
+            int val = 0;
+            for(int k = 0; k < 3; k = k + 1){
+                val = val + mat1[i][k] * mat2[k][j];
+            }
+            result[i][j] = val;
+            printf("%4d ",val);
+        }
+        printf("\n");
+    }
+    return 0;
+}
