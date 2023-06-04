@@ -1,6 +1,5 @@
 #include "ast.hpp"
 #include "codegen.hpp"
-#include "utils.hpp"
 #include "stdio.h"
 #include "stdlib.h"
 
@@ -63,9 +62,11 @@ Value *AST::Program::GenCode(CODEGEN_PARAMS) {
 
     if (!_Defs) return nullptr;
     Value *ret = nullptr;
+    // Iterate all the defs
     for (auto def: (*_Defs)) {
         if (def) {
             if(!(ret = def->GenCode(context))) {
+                // if error
                 return nullptr;
             }
         }
@@ -100,6 +101,7 @@ Value *AST::IfStm::GenCode(CODEGEN_PARAMS) {
     llvm::Value* condition = _Condition->GenCode(context);
     if (!condition) return nullptr;
 
+    // implicit convert to bool
     if ((condition = TypeCastToBool(condition)) == nullptr) {
         return LogError("Invalid conversion of 'if' condition to bool.\n");
     }
@@ -107,6 +109,7 @@ Value *AST::IfStm::GenCode(CODEGEN_PARAMS) {
     BasicBlock *thenBlock = BasicBlock::Create(mContext, "then");
     BasicBlock *elseBlock = BasicBlock::Create(mContext, "else");
     BasicBlock *endBlock = BasicBlock::Create(mContext, "end");
+    // conditional branch
     mBuilder.CreateCondBr(condition, thenBlock, elseBlock);
 
     context->curFunction->getBasicBlockList().push_back(thenBlock);
@@ -123,6 +126,7 @@ Value *AST::IfStm::GenCode(CODEGEN_PARAMS) {
     }
     if (!mBuilder.GetInsertBlock()->getTerminator()) mBuilder.CreateBr(endBlock);
     
+    // gete back to end block
     context->curFunction->getBasicBlockList().push_back(endBlock);
     mBuilder.SetInsertPoint(endBlock);
 
@@ -142,18 +146,22 @@ Value *AST::WhileStm::GenCode(CODEGEN_PARAMS) {
     BasicBlock *bodyBlock = BasicBlock::Create(mContext, "body");
     BasicBlock *endBlock = BasicBlock::Create(mContext, "end");
 
+    // jump to condition block
     mBuilder.CreateBr(startBlock);
     context->curFunction->getBasicBlockList().push_back(startBlock);
     mBuilder.SetInsertPoint(startBlock);
 
+    // evaluate the value
     llvm::Value* condition = _Condition->GenCode(context);
     if (!condition) return nullptr;
     
+    // implicit convert to bool
     if ((condition = TypeCastToBool(condition)) == nullptr) {
         return LogError("Invalid conversion of 'while' condition to bool.\n");
     }
     if (!mBuilder.GetInsertBlock()->getTerminator()) mBuilder.CreateCondBr(condition, bodyBlock, endBlock);
 
+    // loop body
     context->curFunction->getBasicBlockList().push_back(bodyBlock);
     mBuilder.SetInsertPoint(bodyBlock);
     if (_LoopBody) {
@@ -179,8 +187,10 @@ Value *AST::ForStm::GenCode(CODEGEN_PARAMS) {
     BasicBlock *bodyBlock = BasicBlock::Create(mContext, "body");
     BasicBlock *endBlock = BasicBlock::Create(mContext, "end");
 
+    // a new scope for initial, condition and instruction
     context->PushScope();
 
+    // initial instructions
     if (_Initial) {
         if (!_Initial->GenCode(context)) return nullptr;
     }
@@ -188,6 +198,7 @@ Value *AST::ForStm::GenCode(CODEGEN_PARAMS) {
     context->curFunction->getBasicBlockList().push_back(condBlock);
     mBuilder.SetInsertPoint(condBlock);
 
+    // condition
     llvm::Value* condition = mBuilder.getInt1(1);
     if (_Condition) {
         if (!(condition = _Condition->GenCode(context))) return nullptr;
@@ -198,6 +209,7 @@ Value *AST::ForStm::GenCode(CODEGEN_PARAMS) {
     }
     mBuilder.CreateCondBr(condition, bodyBlock, endBlock);
 
+    // loop body
     context->curFunction->getBasicBlockList().push_back(bodyBlock);
     mBuilder.SetInsertPoint(bodyBlock);
     if (_LoopBody) {
@@ -207,6 +219,7 @@ Value *AST::ForStm::GenCode(CODEGEN_PARAMS) {
     }
     if (!mBuilder.GetInsertBlock()->getTerminator()) mBuilder.CreateBr(instBlock);
     
+    // instruction
     context->curFunction->getBasicBlockList().push_back(instBlock);
     mBuilder.SetInsertPoint(instBlock);
 
@@ -215,6 +228,7 @@ Value *AST::ForStm::GenCode(CODEGEN_PARAMS) {
     }
     mBuilder.CreateBr(condBlock);
     
+    // end
     context->curFunction->getBasicBlockList().push_back(endBlock);
     mBuilder.SetInsertPoint(endBlock);
 
@@ -269,6 +283,8 @@ string GetTypeString(Type *type) {
         return "float" + additional;
     } else if (type == Type::getDoubleTy(mContext)) {
         return "double" + additional;
+    } else if (type == Type::getVoidTy(mContext)) {
+        return "void" + additional;
     }
     return "undefined";
 }
@@ -283,12 +299,14 @@ Value *AST::ReturnStm::GenCode(CODEGEN_PARAMS) {
         return LogError("'return' should be used inside a function.\n");
     }
     if (!_ReturnValue) {
+        // void type
         if (!function->getReturnType()->isVoidTy()) {
             return LogError("Return-statement must have a value, in function returning '" + GetTypeString(function->getReturnType()) + "'.\n");
         }
         return mBuilder.CreateRetVoid();
     } else {
         Value *returnValue = _ReturnValue->GenCode(context);
+        // type conversion
         if ((returnValue = TypeCastTo(returnValue, function->getReturnType())) == nullptr) {
             return LogError("Invalid conversion from'" + GetTypeString(returnValue->getType()) + "' to '" +
                 GetTypeString(function->getReturnType()) + "'.\n");
@@ -326,6 +344,7 @@ Value *AST::Variable::GenCode(CODEGEN_PARAMS) {
     cerr << "Variable::GenCode()" << endl;
 #endif
 
+    // look up at symbol table
     CodeGenContext::SymbolType type = context->LookUpVariableSymbolType(_Name);
     if (type == CodeGenContext::SymbolType::tUndefined) {
         return LogError("Identifier undeclared: " + _Name + "\n");
@@ -334,8 +353,10 @@ Value *AST::Variable::GenCode(CODEGEN_PARAMS) {
         return LogError(_Name + " is not a variable or constant\n");
     }
     Value *val = context->LookUpVariable(_Name);
+    // get type
     Type *vtype = val->getType()->getPointerElementType();
     if (vtype->isArrayTy()) {
+        // array type variable is returned as a pointer
         return mBuilder.CreatePointerCast(val, vtype->getArrayElementType()->getPointerTo());
     }
     return mBuilder.CreateLoad(vtype, val, _Name.c_str());
@@ -403,11 +424,13 @@ Value *AST::ArraySubscript::GenPointer(CODEGEN_PARAMS) {
     if (!(arr->getType()->isPointerTy())) {
         return LogError("Operator '[]' can only be used with arrays or pointers.\n");
     }
+    // the index
     Value *idx = _IndexVal->GenCode(context);
     if (!idx) return nullptr;
     if (!(idx->getType()->isIntegerTy())) {
         return LogError("The index of array must be a integer.\n");
     }
+    // pointer addition
     return mBuilder.CreateGEP(arr->getType()->getPointerElementType(), arr, idx);
 }
 
@@ -416,6 +439,7 @@ Value *AST::FuncCall::GenCode(CODEGEN_PARAMS) {
     cerr << "FuncCall::GenCode()" << endl;
 #endif
 
+    // look up the symbol
     CodeGenContext::SymbolType symbolType = context->LookUpGlobalSymbolType(_FuncName);
     if (symbolType != CodeGenContext::SymbolType::tFunction) {
         return LogError(_FuncName + " is not a function.\n");
@@ -425,6 +449,7 @@ Value *AST::FuncCall::GenCode(CODEGEN_PARAMS) {
         return LogError(_FuncName + " is not a function.\n");
     }
     int numParams = function->getFunctionType()->getNumParams();
+    // compare the number of params
     if (!function->isVarArg() && _ParmList->size() != numParams
         || function->isVarArg() && _ParmList->size() < numParams) {
         return LogError(_FuncName + " takes " + to_string(numParams) + " params, but " +
@@ -433,8 +458,16 @@ Value *AST::FuncCall::GenCode(CODEGEN_PARAMS) {
     vector<Value *> params;
     for (int i = 0; i < (int)_ParmList->size(); ++ i) {
         Value *val = _ParmList->at(i)->GenCode(context);
+        // implicit type conversion
         if (i < numParams && (val = TypeCastTo(val, function->getArg(i)->getType())) == nullptr) {
             return LogError("Invalid type-casting when calling " + _FuncName + " .\n");
+        } else if (i >= numParams) {
+            // vararg needs int32 and double
+            if (val->getType()->isIntegerTy()) {
+                val = TypeCastTo(val, mBuilder.getInt32Ty());
+            } else if (val->getType()->isFloatingPointTy()) {
+                val = TypeCastTo(val, mBuilder.getDoubleTy());
+            }
         }
         params.push_back(val);
     }
@@ -457,11 +490,13 @@ Value *AST::StructReference::GenPointer(CODEGEN_PARAMS) {
     if (node == nullptr) {
         return LogError("Internal error: Undefined struct type.\n");
     }
+    // search for member index and type
     Type *memType = nullptr;
     int idx = 0, flag = 0;
     for (AST::StructMember *member: *(node->_Member)) {
         for (string name: *(member->_MemberList)) {
             if (name == _Member) {
+                // found
                 memType = member->_Type->GetLLVMType(context);
                 flag = 1;
                 break;
@@ -473,6 +508,7 @@ Value *AST::StructReference::GenPointer(CODEGEN_PARAMS) {
     if (flag == 0) {
         return LogError("The struct has no member named '" + _Member + "'.\n");
     }
+    // move the pointer
     return mBuilder.CreateGEP(val->getType()->getPointerElementType(), val,
         {mBuilder.getInt32(0), mBuilder.getInt32(idx)});
 }
@@ -637,11 +673,14 @@ Value *AST::Modulo::GenCode(CODEGEN_PARAMS) {
 }
 
 Value *AST::Addition::GenCode(CODEGEN_PARAMS) {
+    // generate IR of both operands
     Value* lhs = this->_LHS->GenCode(context);
     Value* rhs = this->_RHS->GenCode(context);
+    // get types
     Type* lhsType = lhs->getType();
     Type* rhsType = rhs->getType();
     if (!lhs || !rhs) return nullptr;
+    // addition between a pointer and a int is allowed
     if ((lhsType->isPointerTy() && rhsType->isIntegerTy()) ||
         (rhsType->isPointerTy() && lhsType->isIntegerTy())) {
         if (lhsType->isPointerTy()) {
@@ -650,8 +689,10 @@ Value *AST::Addition::GenCode(CODEGEN_PARAMS) {
             return mBuilder.CreateGEP(rhsType->getPointerElementType(), rhs, lhs);
         }
     } else {
+        // otherwise calc the merged type
         Type *targetType = CalcArithMergedType(lhsType, rhsType);
         if (!targetType) return LogError("Invalid type conversion when doing addition.\n");
+        // implicit type conversion
         if (lhsType != targetType) {
             lhs = TypeCastTo(lhs, targetType);
         }
@@ -659,6 +700,7 @@ Value *AST::Addition::GenCode(CODEGEN_PARAMS) {
             rhs = TypeCastTo(rhs, targetType);
         }
         if (!lhs || !rhs) return LogError("Invalid type conversion when doing addition.\n");
+        // create add IR
         return targetType->isFloatingPointTy() ? mBuilder.CreateFAdd(lhs, rhs) : mBuilder.CreateAdd(lhs, rhs);
     }
 }
@@ -1018,18 +1060,20 @@ Value *AST::FuncDef::GenCode(CODEGEN_PARAMS) {
                 reinterpret_cast<AST::DefinedType *>(parm->_Type)->_Name +
                 " of function " + _Name + ".\n");
         }
+        // check if it's void
         if (type->isVoidTy()) {
             hasVoid = true;
             if (parm->_Name != "") {
                 return LogError("invalid use of type 'void' in parameter declaration.\n");
             }
         }
-        // TODO array param
         parmTypes.push_back(type);
     }
+    // (void, int) is not allowed
     if (parmTypes.size() > 1 && hasVoid) {
         return LogError("invalid use of type 'void' in parameter declaration.\n");
     }
+    // (void) means no param
     if (hasVoid) {
         parmTypes.clear();
     }
@@ -1055,20 +1099,24 @@ Value *AST::FuncDef::GenCode(CODEGEN_PARAMS) {
     if (_FuncBody) {
         BasicBlock *funcBlock = BasicBlock::Create(mContext, "entry", function);
         mBuilder.SetInsertPoint(funcBlock);
+        // new scope for function params
         context->PushScope();
 
         auto parm = _ParmList->begin();
         for (auto &arg: function->args()) {
+            // create alloca and add into symbol table
             AllocaInst *alloca = mBuilder.CreateAlloca((*parm)->_Type->GetLLVMType(context),
                 nullptr, (*parm)->_Name);
             mBuilder.CreateStore(&arg, alloca);
             context->AddDefinition((*parm)->_Name, alloca, CodeGenContext::SymbolType::tVariable);
             ++ parm;
         }
+        // set current function
         context->curFunction = function;
         context->PushScope();
         _FuncBody->GenCode(context);
-        if (!funcBlock->getTerminator()) {
+        if (!mBuilder.GetInsertBlock()->getTerminator()) {
+            // if it's not terminated, add a default return
             if (!returnType->isVoidTy()) mBuilder.CreateRet(UndefValue::get(returnType));
             else mBuilder.CreateRetVoid();
         }
@@ -1109,10 +1157,12 @@ Value *AST::VarDef::GenCode(CODEGEN_PARAMS) {
     Value *ret = nullptr;
     if (context->curFunction) {
         for (auto var: (*_VarList)) {
+            // check is there's already definition
             if (context->isDefinedInCurrentScope(var->_Name)) {
                 return LogError("Duplicated definition of " + var->_Name + ".\n");
             }
             Value *initialExp = nullptr;
+            // calc initial value
             if (var->_InitialExp) {
                 initialExp = var->_InitialExp->GenCode(context);
                 if (initialExp == nullptr) {
@@ -1121,11 +1171,14 @@ Value *AST::VarDef::GenCode(CODEGEN_PARAMS) {
             }
             AllocaInst *alloc = mBuilder.CreateAlloca(type, nullptr, var->_Name);
             if (initialExp) {
+                // type cast
                 if (!(initialExp = TypeCastTo(initialExp, type))) {
                     return LogError("Invalid type conversion while initializing.\n");
                 }
+                // store the initial value
                 mBuilder.CreateStore(initialExp, alloc);
             }
+            // add into symbol table
             context->AddDefinition(var->_Name, alloc, _Type->_isConst ?
                 CodeGenContext::SymbolType::tConstant : CodeGenContext::SymbolType::tVariable);
             ret = alloc;
@@ -1148,7 +1201,7 @@ Value *AST::VarDef::GenCode(CODEGEN_PARAMS) {
                 if (!(exp = TypeCastTo(exp, type))) {
                     return LogError("Invalid type conversion while initializing.\n");
                 }
-                initialExp = reinterpret_cast<llvm::Constant *>(exp);
+                initialExp = (llvm::Constant *)(exp);
             }
 
             context->mModule->getOrInsertGlobal(var->_Name, type);
@@ -1172,9 +1225,11 @@ Value *AST::VarInit::GenCode(CODEGEN_PARAMS) {
 Value *AST::TypeDef::GenCode(CODEGEN_PARAMS) {
     Type *type = _VarType->GetLLVMType(context);
     if (type == nullptr) return nullptr;
+    // check if it's previously declared
     if (context->LookUpVariableSymbolType(_Alias) != CodeGenContext::SymbolType::tUndefined) {
         return LogError("Type alias '" + _Alias + "' has already been declared.\n");
     }
+    // add into symbol table
     context->AddDefinition(_Alias, reinterpret_cast<Value *>(type), CodeGenContext::SymbolType::tType);
     return reinterpret_cast<Value *>(type);
 }
@@ -1232,6 +1287,8 @@ Type *AST::StructType::GetLLVMType(CODEGEN_PARAMS) {
             members.push_back(memType);
         }
     }
+
+    // register thi struct type
     ((llvm::StructType *)_LLVMType)->setBody(members);
     context->AddStructType(_LLVMType, this);
     return _LLVMType;

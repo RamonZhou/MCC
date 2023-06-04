@@ -1,13 +1,14 @@
-
+int f(int a) {
+    if (a == 0) {
+        return 1;
+    } else {
+        return 2;
+    }
+}
 
 int main() {
-    int b;
-    int arr2;
-    double c;
-    int k = 0;
-    k = 1;
-    
-    int array(2) arr1;
+    int a = 1;
+    printf("Hello world!");
 
     // a = b + 1;              // a = 3, b = 2
     // d = c;                  // d = 0.5

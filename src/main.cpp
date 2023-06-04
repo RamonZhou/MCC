@@ -17,8 +17,8 @@ int main(int argc, char* argv[]) {
     bool optionError = false;
 
     string outputfile = "a.out";
-    int optimizationLvl = 2;
-    string llcOptions = "";
+    char optimizationLvl = '2';
+    string llcOptions = "-O2";
 
     int optch = ' ';
     while ((optch = getopt(argc, argv, "vo:O::")) != -1) {
@@ -30,12 +30,12 @@ int main(int argc, char* argv[]) {
                 outputfile = string(optarg);
                 break;
             case 'O':
-                if (strlen(optarg) != 1 || optarg[0] < '0' || optarg[0] > '3') {
-                    cerr << "Optimizaion level option should be [-O0, -O1, -O2, or -O3], not '-O" << optarg << "'." << endl;
+                if (strlen(optarg) != 1 || ((optarg[0] < '0' || optarg[0] > '3') && optarg[0] != 's' && optarg[0] != 'z')) {
+                    cerr << "Optimizaion level option should be [-O0, -O1, -O2, -O3, -Os or -Oz], not '-O" << optarg << "'." << endl;
                     optionError = true;
                     break;
                 }
-                optimizationLvl = optarg[0] - '0';
+                optimizationLvl = optarg[0];
             case '?': default:
                 cerr << "Unknown option -" << (char)optch << endl;
                 optionError = true;
@@ -44,7 +44,7 @@ int main(int argc, char* argv[]) {
     }
 
     if (optionError) return 1;
-    llcOptions = "-O" + to_string(optimizationLvl);
+    llcOptions[2] = optimizationLvl;
 
     if (optind >= argc) {
         cerr << "Please give the source file." << endl;
@@ -72,10 +72,10 @@ int main(int argc, char* argv[]) {
                 "node[shape = record, fontname = \"times\"]\n";
             Root->GenGraphNode(counter, ss);
             ss << "}" << endl;
-            std::ofstream dotfile("graph.dot");
+            std::ofstream dotfile("ast_viz.dot");
             dotfile << ss.str() << endl;
             dotfile.close();
-            system("dot graph.dot -T png -o graph.png");
+            system("dot ast_viz.dot -T png -o ast_viz.png");
         }
     }
 
