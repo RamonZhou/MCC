@@ -117,14 +117,19 @@ bool CodeGenContext::GenerateIRCode(AST::Program *Root) {
     // Define printf
     std::vector<Type *> printfArgs;
     printfArgs.push_back(mBuilder.getInt8Ty()->getPointerTo());
+    // args: char*, ...(vararg)
     ArrayRef<Type*> argsRef(printfArgs);
     FunctionType *printfType = FunctionType::get(mBuilder.getInt32Ty(), argsRef, true);
-    // Constant *printfFunc = mModule->getOrInsertFunction("printf", printfType);
+    // Create in module
     auto printf_func = Function::Create(printfType, GlobalValue::ExternalLinkage, "printf", mModule.get());
+    // Add into global symbol table
     AddGlobalDefinition("printf", SymbolType::tFunction);
+    // Create in module
     auto scanf_func = Function::Create(printfType, GlobalValue::ExternalLinkage, "scanf", mModule.get());
+    // Add into global symbol table
     AddGlobalDefinition("scanf", SymbolType::tFunction);
     
+    // Code Generation
     Value *ret = Root->GenCode(this);
 
     PopScope();

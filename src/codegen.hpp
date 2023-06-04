@@ -67,13 +67,17 @@ public:
     CodeGenContext();
     ~CodeGenContext() {}
 
+    // add new define scope
     void PushScope();
+    // pop the top define scope
     void PopScope();
+
     Value *LookUpVariable(string name);
     Type *LookUpVariableLLVMType(string name);
     SymbolType LookUpVariableSymbolType(string name);
     void AddDefinition(string name, Value *value, SymbolType type);
     bool isDefinedInCurrentScope(string name);
+    
     SymbolType LookUpGlobalSymbolType(string name);
     void AddGlobalDefinition(string name, SymbolType type);
     bool isDefinedGlobally(string name);
@@ -94,6 +98,7 @@ public:
     Function *curFunction;
 
 private:
+    BasicBlock *mGlobalBlock;
     deque<BasicBlock *> mLoopBeginBlocks;
     deque<BasicBlock *> mLoopEndBlocks;
     deque<unique_ptr<SymbolTable>> mSymbolTables;
